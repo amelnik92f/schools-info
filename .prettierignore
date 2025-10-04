@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+.next
+out
+dist
+build
+coverage
+
+# Cache
+.turbo
+.cache
+.eslintcache
+
+# Environment
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Public assets
+public
+
+# Config files that should maintain specific formatting
+tsconfig.json
+next-env.d.ts

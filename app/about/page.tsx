@@ -19,15 +19,18 @@ export default function AboutPage() {
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                 <span className="text-2xl">🏫</span>
               </div>
-              <h2 className="text-2xl font-bold text-foreground">The Project</h2>
+              <h2 className="text-2xl font-bold text-foreground">
+                The Project
+              </h2>
             </div>
             <p className="text-base text-default-700 leading-relaxed">
               Schools Info is an aggregator of schools in Berlin, designed to
               simplify the search for the right school for your child. Finding a
-              suitable school can be overwhelming with so many options across the
-              city. This platform brings together comprehensive information about
-              Berlin schools in one place, making it easier for parents to compare
-              and discover educational institutions that match their needs.
+              suitable school can be overwhelming with so many options across
+              the city. This platform brings together comprehensive information
+              about Berlin schools in one place, making it easier for parents to
+              compare and discover educational institutions that match their
+              needs.
             </p>
           </CardBody>
         </Card>

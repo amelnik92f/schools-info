@@ -467,6 +467,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
             {filteredSchools.map((school) => {
               const [lng, lat] = school.geometry.coordinates;
               const color = getMarkerColor(school.properties.schultyp);
+              const isSelected = selectedSchool?.id === school.id;
 
               return (
                 <Marker
@@ -480,15 +481,19 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   }}
                 >
                   <div
-                    className="cursor-pointer transition-transform hover:scale-110"
+                    className={`cursor-pointer transition-all ${
+                      isSelected ? "scale-125" : "hover:scale-110"
+                    }`}
                     style={{
                       width: "24px",
                       height: "24px",
                       borderRadius: "50% 50% 50% 0",
                       backgroundColor: color,
-                      border: "2px solid white",
+                      border: isSelected ? "3px solid #fff" : "2px solid white",
                       transform: "rotate(-45deg)",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                      boxShadow: isSelected
+                        ? "0 0 0 4px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
+                        : "0 2px 4px rgba(0,0,0,0.3)",
                     }}
                   />
                 </Marker>
@@ -501,7 +506,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 longitude={selectedSchool.geometry.coordinates[0]}
                 latitude={selectedSchool.geometry.coordinates[1]}
                 anchor="top"
-                offset={25}
+                offset={10}
                 onClose={handleClosePopup}
                 closeButton={true}
                 closeOnClick={false}

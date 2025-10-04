@@ -1,3 +1,60 @@
 @import "tailwindcss";
 
 @config "../tailwind.config.js";
+
+/* Custom styles for MapLibre popup close button */
+.maplibregl-popup-close-button {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 24px !important;
+  line-height: 32px !important;
+  padding: 0 !important;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #666;
+  background: transparent;
+}
+
+.maplibregl-popup-close-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
+  transform: scale(1.1);
+}
+
+.maplibregl-popup-close-button:active {
+  transform: scale(0.95);
+}
+
+/* Improve popup content styling - theme aware */
+.maplibregl-popup-content {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+
+/* Popup tip (arrow) - theme aware */
+.maplibregl-popup-tip {
+  border-top-color: #ffffff !important;
+  border-bottom-color: #ffffff !important;
+}
+
+/* Dark mode adjustments */
+.dark .maplibregl-popup-close-button {
+  color: #aaa;
+}
+
+.dark .maplibregl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.dark .maplibregl-popup-content {
+  background: #18181b !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .maplibregl-popup-tip {
+  border-top-color: #18181b !important;
+  border-bottom-color: #18181b !important;
+}

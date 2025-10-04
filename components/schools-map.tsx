@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import Map, {
   Marker,
   Popup,
   NavigationControl,
   FullscreenControl,
   ScaleControl,
+  MapRef,
 } from "react-map-gl/maplibre";
 import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
@@ -35,6 +36,7 @@ const SCHOOL_TYPE_COLORS: Record<string, string> = {
 };
 
 export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
+  const mapRef = useRef<MapRef>(null);
   const [selectedSchool, setSelectedSchool] = useState<SchoolFeature | null>(
     null,
   );
@@ -143,6 +145,19 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   const handleMarkerClick = useCallback((school: SchoolFeature) => {
     setSelectedSchool(school);
+
+    // Smoothly fly to the selected school with animation
+    const [lng, lat] = school.geometry.coordinates;
+    const latOffset = 0.01; // Offset to position popup nicely
+
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [lng, lat - latOffset],
+        zoom: Math.max(mapRef.current.getZoom(), 13),
+        duration: 1000, // 1 second animation
+        essential: true,
+      });
+    }
   }, []);
 
   const handleClosePopup = useCallback(() => {
@@ -436,6 +451,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
         </div>
         <div className="relative w-full h-[600px]">
           <Map
+            ref={mapRef}
             {...viewState}
             onMove={(evt) => setViewState(evt.viewState)}
             style={{ width: "100%", height: "100%" }}
@@ -484,7 +500,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
               <Popup
                 longitude={selectedSchool.geometry.coordinates[0]}
                 latitude={selectedSchool.geometry.coordinates[1]}
-                anchor="bottom"
+                anchor="top"
+                offset={25}
                 onClose={handleClosePopup}
                 closeButton={true}
                 closeOnClick={false}
@@ -553,9 +570,9 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                           href={selectedSchool.properties.internet}
                           isExternal
                           size="sm"
-                          className="text-primary"
+                          className="text-primary break-all"
                         >
-                          Website
+                          {selectedSchool.properties.internet}
                         </Link>
                       </div>
                     )}

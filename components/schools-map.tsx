@@ -11,6 +11,10 @@ import Map, {
 import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Link } from "@heroui/link";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Checkbox } from "@heroui/checkbox";
+import { Divider } from "@heroui/divider";
 import { SchoolsGeoJSON, SchoolFeature } from "@/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -40,7 +44,86 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     zoom: 10,
   });
 
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSchoolTypes, setSelectedSchoolTypes] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedCarriers, setSelectedCarriers] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedDistricts, setSelectedDistricts] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showFilters, setShowFilters] = useState(false);
+
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
+
+  // Extract unique values for filters
+  const { schoolTypes, carriers, districts } = useMemo(() => {
+    const typesSet = new Set<string>();
+    const carriersSet = new Set<string>();
+    const districtsSet = new Set<string>();
+
+    schoolsData.features.forEach((school) => {
+      typesSet.add(school.properties.schultyp);
+      carriersSet.add(school.properties.traeger);
+      districtsSet.add(school.properties.bezirk);
+    });
+
+    return {
+      schoolTypes: Array.from(typesSet).sort(),
+      carriers: Array.from(carriersSet).sort(),
+      districts: Array.from(districtsSet).sort(),
+    };
+  }, [schoolsData]);
+
+  // Filter schools based on all criteria
+  const filteredSchools = useMemo(() => {
+    return schoolsData.features.filter((school) => {
+      // Search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          school.properties.schulname.toLowerCase().includes(query) ||
+          school.properties.strasse.toLowerCase().includes(query) ||
+          school.properties.bezirk.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // School type filter
+      if (
+        selectedSchoolTypes.size > 0 &&
+        !selectedSchoolTypes.has(school.properties.schultyp)
+      ) {
+        return false;
+      }
+
+      // Carrier filter
+      if (
+        selectedCarriers.size > 0 &&
+        !selectedCarriers.has(school.properties.traeger)
+      ) {
+        return false;
+      }
+
+      // District filter
+      if (
+        selectedDistricts.size > 0 &&
+        !selectedDistricts.has(school.properties.bezirk)
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    schoolsData.features,
+    searchQuery,
+    selectedSchoolTypes,
+    selectedCarriers,
+    selectedDistricts,
+  ]);
 
   // Calculate bounds from school data
   const bounds = useMemo(() => {
@@ -66,9 +149,291 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     setSelectedSchool(null);
   }, []);
 
+  const toggleSchoolType = (type: string) => {
+    setSelectedSchoolTypes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(type)) {
+        newSet.delete(type);
+      } else {
+        newSet.add(type);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCarrier = (carrier: string) => {
+    setSelectedCarriers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(carrier)) {
+        newSet.delete(carrier);
+      } else {
+        newSet.add(carrier);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleDistrict = (district: string) => {
+    setSelectedDistricts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(district)) {
+        newSet.delete(district);
+      } else {
+        newSet.add(district);
+      }
+      return newSet;
+    });
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedSchoolTypes(new Set());
+    setSelectedCarriers(new Set());
+    setSelectedDistricts(new Set());
+  };
+
+  const hasActiveFilters =
+    searchQuery ||
+    selectedSchoolTypes.size > 0 ||
+    selectedCarriers.size > 0 ||
+    selectedDistricts.size > 0;
+
   return (
     <Card className="bg-content1 shadow-medium overflow-hidden">
       <CardBody className="p-0">
+        {/* Filter Panel */}
+        <div className="border-b border-divider">
+          <div className="p-4">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-semibold text-foreground">
+                  🔍 Filters
+                </span>
+                <Chip size="sm" variant="flat" color="primary">
+                  {filteredSchools.length} / {schoolsData.features.length}{" "}
+                  schools
+                </Chip>
+              </div>
+              <div className="flex items-center gap-2">
+                {hasActiveFilters && (
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    color="warning"
+                    onPress={clearAllFilters}
+                  >
+                    Clear All
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="flat"
+                  onPress={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? "Hide" : "Show"} Filters
+                </Button>
+              </div>
+            </div>
+
+            {/* Search Input */}
+            <Input
+              placeholder="Search by school name, street, or district..."
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              isClearable
+              startContent={
+                <span className="text-default-400 text-lg">🔎</span>
+              }
+              classNames={{
+                input: "text-sm",
+              }}
+            />
+
+            {/* Expandable Filters */}
+            {showFilters && (
+              <div className="mt-4 space-y-4">
+                <Divider />
+
+                {/* School Type Filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    School Types
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {schoolTypes.map((type) => {
+                      // Count based on other active filters (excluding school type)
+                      const count = schoolsData.features.filter((s) => {
+                        // Apply search filter
+                        if (searchQuery) {
+                          const query = searchQuery.toLowerCase();
+                          const matchesSearch =
+                            s.properties.schulname
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.strasse
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.bezirk.toLowerCase().includes(query);
+                          if (!matchesSearch) return false;
+                        }
+                        // Apply carrier filter
+                        if (
+                          selectedCarriers.size > 0 &&
+                          !selectedCarriers.has(s.properties.traeger)
+                        ) {
+                          return false;
+                        }
+                        // Apply district filter
+                        if (
+                          selectedDistricts.size > 0 &&
+                          !selectedDistricts.has(s.properties.bezirk)
+                        ) {
+                          return false;
+                        }
+                        // Check if this is the current type
+                        return s.properties.schultyp === type;
+                      }).length;
+                      return (
+                        <Checkbox
+                          key={type}
+                          size="sm"
+                          isSelected={selectedSchoolTypes.has(type)}
+                          onValueChange={() => toggleSchoolType(type)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{
+                                backgroundColor: getMarkerColor(type),
+                              }}
+                            />
+                            <span className="text-xs text-default-700">
+                              {type} ({count})
+                            </span>
+                          </div>
+                        </Checkbox>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Divider />
+
+                {/* Carrier Filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Operator Type
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {carriers.map((carrier) => {
+                      // Count based on other active filters (excluding carrier)
+                      const count = schoolsData.features.filter((s) => {
+                        // Apply search filter
+                        if (searchQuery) {
+                          const query = searchQuery.toLowerCase();
+                          const matchesSearch =
+                            s.properties.schulname
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.strasse
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.bezirk.toLowerCase().includes(query);
+                          if (!matchesSearch) return false;
+                        }
+                        // Apply school type filter
+                        if (
+                          selectedSchoolTypes.size > 0 &&
+                          !selectedSchoolTypes.has(s.properties.schultyp)
+                        ) {
+                          return false;
+                        }
+                        // Apply district filter
+                        if (
+                          selectedDistricts.size > 0 &&
+                          !selectedDistricts.has(s.properties.bezirk)
+                        ) {
+                          return false;
+                        }
+                        // Check if this is the current carrier
+                        return s.properties.traeger === carrier;
+                      }).length;
+                      return (
+                        <Checkbox
+                          key={carrier}
+                          size="sm"
+                          isSelected={selectedCarriers.has(carrier)}
+                          onValueChange={() => toggleCarrier(carrier)}
+                        >
+                          <span className="text-xs text-default-700">
+                            {carrier} ({count})
+                          </span>
+                        </Checkbox>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Divider />
+
+                {/* District Filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Districts
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {districts.map((district) => {
+                      // Count based on other active filters (excluding district)
+                      const count = schoolsData.features.filter((s) => {
+                        // Apply search filter
+                        if (searchQuery) {
+                          const query = searchQuery.toLowerCase();
+                          const matchesSearch =
+                            s.properties.schulname
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.strasse
+                              .toLowerCase()
+                              .includes(query) ||
+                            s.properties.bezirk.toLowerCase().includes(query);
+                          if (!matchesSearch) return false;
+                        }
+                        // Apply school type filter
+                        if (
+                          selectedSchoolTypes.size > 0 &&
+                          !selectedSchoolTypes.has(s.properties.schultyp)
+                        ) {
+                          return false;
+                        }
+                        // Apply carrier filter
+                        if (
+                          selectedCarriers.size > 0 &&
+                          !selectedCarriers.has(s.properties.traeger)
+                        ) {
+                          return false;
+                        }
+                        // Check if this is the current district
+                        return s.properties.bezirk === district;
+                      }).length;
+                      return (
+                        <Checkbox
+                          key={district}
+                          size="sm"
+                          isSelected={selectedDistricts.has(district)}
+                          onValueChange={() => toggleDistrict(district)}
+                        >
+                          <span className="text-xs text-default-700">
+                            {district} ({count})
+                          </span>
+                        </Checkbox>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
         <div className="relative w-full h-[600px]">
           <Map
             {...viewState}
@@ -83,7 +448,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
             <ScaleControl position="bottom-left" />
 
             {/* School Markers */}
-            {schoolsData.features.map((school) => {
+            {filteredSchools.map((school) => {
               const [lng, lat] = school.geometry.coordinates;
               const color = getMarkerColor(school.properties.schultyp);
 

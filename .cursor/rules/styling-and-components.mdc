@@ -1,0 +1,199 @@
+---
+description: Design guidelines for styling and components
+globs:
+alwaysApply: true
+---
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI Library**: HeroUI (Hero UI components)
+- **Styling**: Tailwind CSS 4 with HeroUI theme
+- **Language**: TypeScript
+- **Theme Management**: next-themes
+
+## HeroUI Design Guidelines
+
+### Component Usage
+
+**ALWAYS** use HeroUI components instead of plain HTML elements:
+
+```tsx
+// ✅ GOOD - Use HeroUI components
+import { Card, CardBody } from "@heroui/card";
+import { Divider } from "@heroui/divider";
+import { Button } from "@heroui/button";
+import { Link } from "@heroui/link";
+
+// ❌ BAD - Don't use plain HTML
+<div className="card">
+<hr />
+<button>
+<a href="...">
+```
+
+### Typography System
+
+Use the project's typography primitives defined with `tailwind-variants`:
+
+```tsx
+import { title, subtitle } from "@/components/primitives";
+
+// Title variants
+<h1 className={title()}>Default title</h1>
+<h1 className={title({ size: "lg" })}>Large title</h1>
+<h1 className={title({ size: "sm" })}>Small title</h1>
+<h1 className={title({ color: "violet" })}>Colored title</h1>
+
+// Subtitle usage
+<p className={subtitle()}>Subtitle text</p>
+<p className={subtitle({ class: "text-default-600" })}>Custom subtitle</p>
+```
+
+### Color Tokens
+
+**ALWAYS** use semantic color tokens that respect the theme system:
+
+```tsx
+// ✅ GOOD - Semantic tokens (work with light/dark mode)
+text-foreground       // Primary text color
+text-default-500      // Secondary text
+text-default-600      // Muted text
+text-default-700      // Body text
+bg-background         // Page background
+bg-content1           // Card/content background
+bg-primary            // Primary brand color
+bg-primary/10         // Primary with opacity
+
+// ❌ BAD - Hard-coded colors
+text-gray-600
+bg-gray-100
+text-black
+```
+
+### Layout Patterns
+
+Follow these layout patterns for consistency:
+
+```tsx
+// Page wrapper with max-width
+<div className="flex flex-col gap-8 max-w-4xl mx-auto">
+
+// Card-based content
+<Card className="bg-content1 shadow-medium">
+  <CardBody className="gap-4 p-8">
+    {/* Content */}
+  </CardBody>
+</Card>
+
+// Icon with badge
+<div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+  <span className="text-2xl">🏫</span>
+</div>
+
+// Section headings
+<div className="flex items-center gap-3 mb-2">
+  <div className="w-12 h-12 rounded-full bg-primary/10">
+    <span className="text-2xl">📚</span>
+  </div>
+  <h2 className="text-2xl font-bold text-foreground">Section Title</h2>
+</div>
+```
+
+### Design Principles
+
+1. **Card-Based Layouts**: Use `Card` components for content sections with `shadow-medium` for elevation
+2. **Generous Spacing**: Use `p-8` for card padding and `gap-6` or `gap-8` between sections
+3. **Icon Badges**: Include emoji icons in rounded badges (`rounded-full bg-primary/10`) for visual interest
+4. **Clear Hierarchy**: Use consistent font sizes and weights (e.g., `text-2xl font-bold` for section headings)
+5. **Readable Text**: Use `leading-relaxed` for body text and `text-base` or `text-lg` for font sizes
+6. **Centered Content**: Use `max-w-4xl mx-auto` for page content to prevent text from spanning too wide
+7. **Responsive Grid**: Use `grid gap-6 md:grid-cols-1` or `md:grid-cols-2` for responsive layouts
+
+### Component Imports
+
+Organize imports following this pattern:
+
+```tsx
+// HeroUI components
+import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+
+// Project utilities and components
+import { title, subtitle } from "@/components/primitives";
+import { siteConfig } from "@/config/site";
+```
+
+### Theme Configuration
+
+The project uses:
+- **Dark mode by default**: Set in `app/layout.tsx` with `defaultTheme: "dark"`
+- **Class-based dark mode**: `darkMode: "class"` in Tailwind config
+- **HeroUI plugin**: Applied in `tailwind.config.js`
+
+## Code Style
+
+### TypeScript
+
+- Use functional components with TypeScript
+- Define prop types explicitly
+- Use proper type imports from React and Next.js
+
+### Formatting
+
+- Use 2-space indentation
+- Keep lines under 80-100 characters when possible
+- Add proper spacing between sections
+
+## Best Practices
+
+1. **Always check existing components** before creating new ones
+2. **Follow HeroUI documentation** for component usage and theming
+3. **Use semantic HTML** with proper heading hierarchy (h1 → h2 → h3)
+4. **Ensure accessibility** by using proper ARIA labels when needed
+5. **Test dark mode** - all components should look good in both themes
+6. **Keep it clean** - prefer simplicity over complexity
+
+## Example: Complete Page Structure
+
+```tsx
+import { Card, CardBody } from "@heroui/card";
+import { title } from "@/components/primitives";
+
+export default function ExamplePage() {
+  return (
+    <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+      {/* Page Header */}
+      <div className="text-center mb-4">
+        <h1 className={title({ size: "lg" })}>Page Title</h1>
+        <p className="text-lg text-default-500 mt-4">
+          Tagline or description
+        </p>
+      </div>
+
+      {/* Content Cards */}
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card className="bg-content1 shadow-medium">
+          <CardBody className="gap-4 p-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                <span className="text-2xl">🎯</span>
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Section Title
+              </h2>
+            </div>
+            <p className="text-base text-default-700 leading-relaxed">
+              Content goes here with proper spacing and readable text.
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
+  );
+}
+```
+
+## References
+
+- [HeroUI Documentation](https://www.heroui.com/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)

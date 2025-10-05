@@ -58,3 +58,14 @@ export interface SchoolsGeoJSON {
   };
   bbox: [number, number, number, number]; // Overall bounding box
 }
+
+// User-defined tags for schools
+export interface SchoolTag {
+  id: string; // Unique tag ID
+  name: string; // Tag name (e.g., "Favorite", "Visited", "Interested")
+  color: string; // Tag color for visual distinction
+}
+
+export interface SchoolTags {
+  [schoolId: string]: string[]; // Map of school ID to array of tag IDs
+}

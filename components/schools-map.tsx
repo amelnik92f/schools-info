@@ -17,6 +17,7 @@ import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
 import { SchoolsGeoJSON, SchoolFeature } from "@/types";
+import { useSchoolTags } from "@/lib/hooks/use-school-tags";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
@@ -57,7 +58,18 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const [selectedDistricts, setSelectedDistricts] = useState<Set<string>>(
     new Set(),
   );
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+
+  // Tags hook
+  const {
+    tags,
+    isLoaded: tagsLoaded,
+    toggleTagOnSchool,
+    getSchoolTags,
+    schoolHasTag,
+    getUsedTags,
+  } = useSchoolTags();
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
@@ -117,6 +129,15 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
         return false;
       }
 
+      // Tag filter
+      if (selectedTags.size > 0) {
+        const schoolTagIds = getSchoolTags(school.id).map((t) => t.id);
+        const hasAnySelectedTag = Array.from(selectedTags).some((tagId) =>
+          schoolTagIds.includes(tagId),
+        );
+        if (!hasAnySelectedTag) return false;
+      }
+
       return true;
     });
   }, [
@@ -125,6 +146,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     selectedSchoolTypes,
     selectedCarriers,
     selectedDistricts,
+    selectedTags,
+    getSchoolTags,
   ]);
 
   // Calculate bounds from school data
@@ -200,18 +223,32 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     });
   };
 
+  const toggleTag = (tagId: string) => {
+    setSelectedTags((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(tagId)) {
+        newSet.delete(tagId);
+      } else {
+        newSet.add(tagId);
+      }
+      return newSet;
+    });
+  };
+
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedSchoolTypes(new Set());
     setSelectedCarriers(new Set());
     setSelectedDistricts(new Set());
+    setSelectedTags(new Set());
   };
 
   const hasActiveFilters =
     searchQuery ||
     selectedSchoolTypes.size > 0 ||
     selectedCarriers.size > 0 ||
-    selectedDistricts.size > 0;
+    selectedDistricts.size > 0 ||
+    selectedTags.size > 0;
 
   return (
     <Card className="bg-content1 shadow-medium overflow-hidden">
@@ -445,6 +482,85 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                     })}
                   </div>
                 </div>
+
+                {/* Tag Filter */}
+                {tagsLoaded && getUsedTags().length > 0 && (
+                  <>
+                    <Divider />
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground mb-3">
+                        Tags
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {getUsedTags().map((tag) => {
+                          // Count schools with this tag
+                          const count = schoolsData.features.filter((s) => {
+                            // Apply search filter
+                            if (searchQuery) {
+                              const query = searchQuery.toLowerCase();
+                              const matchesSearch =
+                                s.properties.schulname
+                                  .toLowerCase()
+                                  .includes(query) ||
+                                s.properties.strasse
+                                  .toLowerCase()
+                                  .includes(query) ||
+                                s.properties.bezirk
+                                  .toLowerCase()
+                                  .includes(query);
+                              if (!matchesSearch) return false;
+                            }
+                            // Apply school type filter
+                            if (
+                              selectedSchoolTypes.size > 0 &&
+                              !selectedSchoolTypes.has(s.properties.schultyp)
+                            ) {
+                              return false;
+                            }
+                            // Apply carrier filter
+                            if (
+                              selectedCarriers.size > 0 &&
+                              !selectedCarriers.has(s.properties.traeger)
+                            ) {
+                              return false;
+                            }
+                            // Apply district filter
+                            if (
+                              selectedDistricts.size > 0 &&
+                              !selectedDistricts.has(s.properties.bezirk)
+                            ) {
+                              return false;
+                            }
+                            // Check if this school has the current tag
+                            return schoolHasTag(s.id, tag.id);
+                          }).length;
+
+                          return (
+                            <Chip
+                              key={tag.id}
+                              size="sm"
+                              variant={
+                                selectedTags.has(tag.id) ? "solid" : "flat"
+                              }
+                              style={{
+                                backgroundColor: selectedTags.has(tag.id)
+                                  ? tag.color
+                                  : `${tag.color}20`,
+                                color: selectedTags.has(tag.id)
+                                  ? "#fff"
+                                  : tag.color,
+                                cursor: "pointer",
+                              }}
+                              onClick={() => toggleTag(tag.id)}
+                            >
+                              {tag.name} ({count})
+                            </Chip>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -582,6 +698,49 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       </div>
                     )}
                   </div>
+
+                  {/* Tags Section */}
+                  {tagsLoaded && (
+                    <>
+                      <Divider className="my-3" />
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            🏷️ Tags
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {tags.map((tag) => {
+                            const isActive = schoolHasTag(
+                              selectedSchool.id,
+                              tag.id,
+                            );
+                            return (
+                              <Chip
+                                key={tag.id}
+                                size="sm"
+                                variant={isActive ? "solid" : "bordered"}
+                                style={{
+                                  backgroundColor: isActive
+                                    ? tag.color
+                                    : "transparent",
+                                  borderColor: tag.color,
+                                  color: isActive ? "#fff" : tag.color,
+                                  cursor: "pointer",
+                                }}
+                                onClick={() =>
+                                  toggleTagOnSchool(selectedSchool.id, tag.id)
+                                }
+                              >
+                                {isActive ? "✓ " : ""}
+                                {tag.name}
+                              </Chip>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </Popup>
             )}

@@ -96,50 +96,7 @@ export function FilterPanel({
 
   return (
     <div className="border-b border-divider">
-      <div className="p-4">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold text-foreground">
-              🔍 Filters
-            </span>
-            <Chip size="sm" variant="flat" color="primary">
-              {filteredSchoolsCount} / {schoolsData.features.length} schools
-            </Chip>
-            {schoolsData.features.some(
-              (f) => f.properties.isConstructionProject,
-            ) && (
-              <Chip size="sm" variant="flat" color="warning">
-                🏗️{" "}
-                {
-                  schoolsData.features.filter(
-                    (f) => f.properties.isConstructionProject,
-                  ).length
-                }{" "}
-                projects
-              </Chip>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {hasActiveFilters() && (
-              <Button
-                size="sm"
-                variant="flat"
-                color="danger"
-                onPress={clearAllFilters}
-              >
-                Clear All
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="flat"
-              onPress={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? "Hide" : "Show"} Filters
-            </Button>
-          </div>
-        </div>
-
+      <div className="p-4 pb-2">
         {/* Custom Location Buttons */}
         {locationsLoaded && (
           <div className="flex items-center gap-2 mb-4">
@@ -230,6 +187,26 @@ export function FilterPanel({
             </div>
           </div>
         )}
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <Chip size="sm" variant="flat" color="primary">
+              {filteredSchoolsCount} / {schoolsData.features.length} schools
+            </Chip>
+            {schoolsData.features.some(
+              (f) => f.properties.isConstructionProject,
+            ) && (
+              <Chip size="sm" variant="flat" color="warning">
+                🏗️{" "}
+                {
+                  schoolsData.features.filter(
+                    (f) => f.properties.isConstructionProject,
+                  ).length
+                }{" "}
+                projects
+              </Chip>
+            )}
+          </div>
+        </div>
 
         {/* Search Input */}
         <Input
@@ -253,7 +230,7 @@ export function FilterPanel({
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 School Types
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="flex flex-col gap-2">
                 {schoolTypes.map((type) => {
                   const count = countSchoolsWithFilter((s) => {
                     if (
@@ -279,13 +256,17 @@ export function FilterPanel({
                       size="sm"
                       isSelected={selectedSchoolTypes.has(type)}
                       onValueChange={() => toggleSchoolType(type)}
+                      classNames={{
+                        wrapper: "min-w-0",
+                        label: "w-full min-w-0",
+                      }}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0 w-full">
                         <div
-                          className="w-2 h-2 rounded-full"
+                          className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: getMarkerColor(type) }}
                         />
-                        <span className="text-xs text-default-700">
+                        <span className="text-xs text-default-700 truncate">
                           {type} ({count})
                         </span>
                       </div>
@@ -345,7 +326,7 @@ export function FilterPanel({
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 Districts
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              <div className="flex flex-col gap-2">
                 {districts.map((district) => {
                   const count = countSchoolsWithFilter((s) => {
                     if (
@@ -371,8 +352,12 @@ export function FilterPanel({
                       size="sm"
                       isSelected={selectedDistricts.has(district)}
                       onValueChange={() => toggleDistrict(district)}
+                      classNames={{
+                        wrapper: "min-w-0",
+                        label: "w-full min-w-0",
+                      }}
                     >
-                      <span className="text-xs text-default-700">
+                      <span className="text-xs text-default-700 truncate block">
                         {district} ({count})
                       </span>
                     </Checkbox>

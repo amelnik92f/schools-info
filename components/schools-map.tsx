@@ -169,79 +169,93 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   }, [setSelectedCustomLocation]);
 
   return (
-    <Card className="bg-content1 shadow-medium overflow-hidden">
-      <CardBody className="p-0">
-        {/* Filter Panel */}
+    <>
+      {/* Left Sidebar */}
+      <div className="w-96 flex flex-col bg-content1 border-r border-divider overflow-y-auto">
+        {/* Header */}
+        <div className="p-6 border-b border-divider">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🏫</span>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">
+                Berlin Schools
+              </h1>
+              <p className="text-sm text-default-500">
+                Making school search in Berlin easier
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Panel and Legend */}
         <FilterPanel
           schoolsData={schoolsData}
           filteredSchoolsCount={filteredSchools.length}
           mapRef={mapRef}
         />
+        {/*<MapLegend />*/}
+      </div>
 
-        {/* Map */}
-        <div className="relative w-full h-[600px]">
-          <MapGL
-            ref={mapRef}
-            {...viewState}
-            onMove={(evt) => setViewState(evt.viewState)}
-            onClick={handleMapClick}
-            style={{ width: "100%", height: "100%" }}
-            mapStyle={mapStyle}
-            attributionControl={{ compact: true }}
-            cursor={isSettingLocation ? "crosshair" : "grab"}
-          >
-            {/* Map Controls */}
-            <NavigationControl position="top-right" />
-            <FullscreenControl position="top-right" />
-            <ScaleControl position="bottom-left" />
+      {/* Map on Right Side */}
+      <div className="flex-1 relative">
+        <MapGL
+          ref={mapRef}
+          {...viewState}
+          onMove={(evt) => setViewState(evt.viewState)}
+          onClick={handleMapClick}
+          style={{ width: "100%", height: "100%" }}
+          mapStyle={mapStyle}
+          attributionControl={{ compact: true }}
+          cursor={isSettingLocation ? "crosshair" : "grab"}
+        >
+          {/* Map Controls */}
+          <NavigationControl position="top-right" />
+          <FullscreenControl position="top-right" />
+          <ScaleControl position="bottom-left" />
 
-            {/* Custom Location Markers */}
-            {locationsLoaded && locations.home && (
-              <CustomLocationMarker
-                type="home"
-                coordinates={locations.home.coordinates}
-                onClick={handleCustomLocationClick}
-              />
-            )}
+          {/* Custom Location Markers */}
+          {locationsLoaded && locations.home && (
+            <CustomLocationMarker
+              type="home"
+              coordinates={locations.home.coordinates}
+              onClick={handleCustomLocationClick}
+            />
+          )}
 
-            {locationsLoaded && locations.work && (
-              <CustomLocationMarker
-                type="work"
-                coordinates={locations.work.coordinates}
-                onClick={handleCustomLocationClick}
-              />
-            )}
+          {locationsLoaded && locations.work && (
+            <CustomLocationMarker
+              type="work"
+              coordinates={locations.work.coordinates}
+              onClick={handleCustomLocationClick}
+            />
+          )}
 
-            {/* School and Construction Project Markers */}
-            {filteredSchools.map((school) => (
-              <SchoolMarker
-                key={school.id}
-                school={school}
-                isSelected={selectedSchool?.id === school.id}
-                onClick={handleMarkerClick}
-              />
-            ))}
+          {/* School and Construction Project Markers */}
+          {filteredSchools.map((school) => (
+            <SchoolMarker
+              key={school.id}
+              school={school}
+              isSelected={selectedSchool?.id === school.id}
+              onClick={handleMarkerClick}
+            />
+          ))}
 
-            {/* Popup for selected school */}
-            {selectedSchool && (
-              <SchoolPopup school={selectedSchool} onClose={handleClosePopup} />
-            )}
+          {/* Popup for selected school */}
+          {selectedSchool && (
+            <SchoolPopup school={selectedSchool} onClose={handleClosePopup} />
+          )}
 
-            {/* Custom Location Popups */}
-            {selectedCustomLocation && locations[selectedCustomLocation] && (
-              <CustomLocationPopup
-                type={selectedCustomLocation}
-                coordinates={locations[selectedCustomLocation].coordinates}
-                onClose={handleCloseCustomLocationPopup}
-                onRemove={removeLocation}
-              />
-            )}
-          </MapGL>
-        </div>
-
-        {/* Legend */}
-        <MapLegend />
-      </CardBody>
-    </Card>
+          {/* Custom Location Popups */}
+          {selectedCustomLocation && locations[selectedCustomLocation] && (
+            <CustomLocationPopup
+              type={selectedCustomLocation}
+              coordinates={locations[selectedCustomLocation].coordinates}
+              onClose={handleCloseCustomLocationPopup}
+              onRemove={removeLocation}
+            />
+          )}
+        </MapGL>
+      </div>
+    </>
   );
 }

@@ -3,7 +3,7 @@ import { SCHOOL_TYPE_COLORS, CONSTRUCTION_STRIPE_COLOR } from "./utils";
 
 export function MapLegend() {
   return (
-    <div className="p-4 bg-content2 border-t border-divider">
+    <div className="p-4 bg-content2">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-sm font-semibold text-foreground">Legend:</span>
       </div>

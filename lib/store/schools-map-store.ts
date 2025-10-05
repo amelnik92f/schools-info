@@ -131,7 +131,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       showAfter4thGradeOnly: false,
       setShowAfter4thGradeOnly: (show) => set({ showAfter4thGradeOnly: show }),
 
-      showFilters: false,
+      showFilters: true,
       setShowFilters: (show) => set({ showFilters: show }),
 
       isSettingLocation: null,

@@ -166,7 +166,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 Berlin Schools
               </h1>
               <p className="text-sm text-default-500">
-                Making school search in Berlin easier
+                Find a school in your district
               </p>
             </div>
           </div>

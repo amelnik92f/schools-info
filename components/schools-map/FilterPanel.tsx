@@ -33,16 +33,12 @@ export function FilterPanel({
     selectedTags,
     showAfter4thGradeOnly,
     setShowAfter4thGradeOnly,
-    showFilters,
-    setShowFilters,
     isSettingLocation,
     setIsSettingLocation,
     toggleSchoolType,
     toggleCarrier,
     toggleDistrict,
     toggleTag,
-    clearAllFilters,
-    hasActiveFilters,
   } = useSchoolsMapStore();
 
   const {
@@ -220,227 +216,161 @@ export function FilterPanel({
           }}
         />
 
-        {/* Expandable Filters */}
-        {showFilters && (
-          <div className="mt-4 space-y-4">
-            <Divider />
+        <div className="mt-4 space-y-4">
+          <Divider />
 
-            {/* School Type Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                School Types
-              </h3>
-              <div className="flex flex-col gap-2">
-                {schoolTypes.map((type) => {
-                  const count = countSchoolsWithFilter((s) => {
-                    if (
-                      selectedCarriers.size > 0 &&
-                      !selectedCarriers.has(s.properties.traeger)
-                    )
-                      return false;
-                    if (
-                      selectedDistricts.size > 0 &&
-                      !selectedDistricts.has(s.properties.bezirk)
-                    )
-                      return false;
-                    if (
-                      showAfter4thGradeOnly &&
-                      !s.properties.acceptsAfter4thGrade
-                    )
-                      return false;
-                    return s.properties.schultyp === type;
-                  });
-                  return (
-                    <Checkbox
-                      key={type}
-                      size="sm"
-                      isSelected={selectedSchoolTypes.has(type)}
-                      onValueChange={() => toggleSchoolType(type)}
-                      classNames={{
-                        wrapper: "min-w-0",
-                        label: "w-full min-w-0",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 w-full">
-                        <div
-                          className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: getMarkerColor(type) }}
-                        />
-                        <span className="text-xs text-default-700 truncate">
-                          {type} ({count})
-                        </span>
-                      </div>
-                    </Checkbox>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Divider />
-
-            {/* Carrier Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                Operator Type
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {carriers.map((carrier) => {
-                  const count = countSchoolsWithFilter((s) => {
-                    if (
-                      selectedSchoolTypes.size > 0 &&
-                      !selectedSchoolTypes.has(s.properties.schultyp)
-                    )
-                      return false;
-                    if (
-                      selectedDistricts.size > 0 &&
-                      !selectedDistricts.has(s.properties.bezirk)
-                    )
-                      return false;
-                    if (
-                      showAfter4thGradeOnly &&
-                      !s.properties.acceptsAfter4thGrade
-                    )
-                      return false;
-                    return s.properties.traeger === carrier;
-                  });
-                  return (
-                    <Checkbox
-                      key={carrier}
-                      size="sm"
-                      isSelected={selectedCarriers.has(carrier)}
-                      onValueChange={() => toggleCarrier(carrier)}
-                    >
-                      <span className="text-xs text-default-700">
-                        {carrier} ({count})
+          {/* School Type Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              School Types
+            </h3>
+            <div className="flex flex-col gap-2">
+              {schoolTypes.map((type) => {
+                const count = countSchoolsWithFilter((s) => {
+                  if (
+                    selectedCarriers.size > 0 &&
+                    !selectedCarriers.has(s.properties.traeger)
+                  )
+                    return false;
+                  if (
+                    selectedDistricts.size > 0 &&
+                    !selectedDistricts.has(s.properties.bezirk)
+                  )
+                    return false;
+                  if (
+                    showAfter4thGradeOnly &&
+                    !s.properties.acceptsAfter4thGrade
+                  )
+                    return false;
+                  return s.properties.schultyp === type;
+                });
+                return (
+                  <Checkbox
+                    key={type}
+                    size="sm"
+                    isSelected={selectedSchoolTypes.has(type)}
+                    onValueChange={() => toggleSchoolType(type)}
+                    classNames={{
+                      wrapper: "min-w-0",
+                      label: "w-full min-w-0",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0 w-full">
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: getMarkerColor(type) }}
+                      />
+                      <span className="text-xs text-default-700 truncate">
+                        {type} ({count})
                       </span>
-                    </Checkbox>
-                  );
-                })}
-              </div>
+                    </div>
+                  </Checkbox>
+                );
+              })}
             </div>
+          </div>
 
-            <Divider />
+          <Divider />
 
-            {/* District Filter */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                Districts
-              </h3>
-              <div className="flex flex-col gap-2">
-                {districts.map((district) => {
-                  const count = countSchoolsWithFilter((s) => {
-                    if (
-                      selectedSchoolTypes.size > 0 &&
-                      !selectedSchoolTypes.has(s.properties.schultyp)
-                    )
-                      return false;
-                    if (
-                      selectedCarriers.size > 0 &&
-                      !selectedCarriers.has(s.properties.traeger)
-                    )
-                      return false;
-                    if (
-                      showAfter4thGradeOnly &&
-                      !s.properties.acceptsAfter4thGrade
-                    )
-                      return false;
-                    return s.properties.bezirk === district;
-                  });
-                  return (
-                    <Checkbox
-                      key={district}
-                      size="sm"
-                      isSelected={selectedDistricts.has(district)}
-                      onValueChange={() => toggleDistrict(district)}
-                      classNames={{
-                        wrapper: "min-w-0",
-                        label: "w-full min-w-0",
-                      }}
-                    >
-                      <span className="text-xs text-default-700 truncate block">
-                        {district} ({count})
-                      </span>
-                    </Checkbox>
-                  );
-                })}
-              </div>
+          {/* Carrier Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Operator Type
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {carriers.map((carrier) => {
+                const count = countSchoolsWithFilter((s) => {
+                  if (
+                    selectedSchoolTypes.size > 0 &&
+                    !selectedSchoolTypes.has(s.properties.schultyp)
+                  )
+                    return false;
+                  if (
+                    selectedDistricts.size > 0 &&
+                    !selectedDistricts.has(s.properties.bezirk)
+                  )
+                    return false;
+                  if (
+                    showAfter4thGradeOnly &&
+                    !s.properties.acceptsAfter4thGrade
+                  )
+                    return false;
+                  return s.properties.traeger === carrier;
+                });
+                return (
+                  <Checkbox
+                    key={carrier}
+                    size="sm"
+                    isSelected={selectedCarriers.has(carrier)}
+                    onValueChange={() => toggleCarrier(carrier)}
+                  >
+                    <span className="text-xs text-default-700">
+                      {carrier} ({count})
+                    </span>
+                  </Checkbox>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Tag Filter */}
-            {tagsLoaded && (
-              <>
-                <Divider />
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">
-                    Tags
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => {
-                      const count = countSchoolsWithFilter((s) => {
-                        if (
-                          selectedSchoolTypes.size > 0 &&
-                          !selectedSchoolTypes.has(s.properties.schultyp)
-                        )
-                          return false;
-                        if (
-                          selectedCarriers.size > 0 &&
-                          !selectedCarriers.has(s.properties.traeger)
-                        )
-                          return false;
-                        if (
-                          selectedDistricts.size > 0 &&
-                          !selectedDistricts.has(s.properties.bezirk)
-                        )
-                          return false;
-                        if (
-                          showAfter4thGradeOnly &&
-                          !s.properties.acceptsAfter4thGrade
-                        )
-                          return false;
-                        return schoolHasTag(s.id, tag.id);
-                      });
+          <Divider />
 
-                      return (
-                        <Chip
-                          key={tag.id}
-                          size="sm"
-                          variant={selectedTags.has(tag.id) ? "solid" : "flat"}
-                          style={{
-                            backgroundColor: selectedTags.has(tag.id)
-                              ? tag.color
-                              : `${tag.color}20`,
-                            color: selectedTags.has(tag.id)
-                              ? "#fff"
-                              : tag.color,
-                            cursor: "pointer",
-                          }}
-                          onClick={() => toggleTag(tag.id)}
-                        >
-                          {tag.name} ({count})
-                        </Chip>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
+          {/* District Filter */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Districts
+            </h3>
+            <div className="flex flex-col gap-2">
+              {districts.map((district) => {
+                const count = countSchoolsWithFilter((s) => {
+                  if (
+                    selectedSchoolTypes.size > 0 &&
+                    !selectedSchoolTypes.has(s.properties.schultyp)
+                  )
+                    return false;
+                  if (
+                    selectedCarriers.size > 0 &&
+                    !selectedCarriers.has(s.properties.traeger)
+                  )
+                    return false;
+                  if (
+                    showAfter4thGradeOnly &&
+                    !s.properties.acceptsAfter4thGrade
+                  )
+                    return false;
+                  return s.properties.bezirk === district;
+                });
+                return (
+                  <Checkbox
+                    key={district}
+                    size="sm"
+                    isSelected={selectedDistricts.has(district)}
+                    onValueChange={() => toggleDistrict(district)}
+                    classNames={{
+                      wrapper: "min-w-0",
+                      label: "w-full min-w-0",
+                    }}
+                  >
+                    <span className="text-xs text-default-700 truncate block">
+                      {district} ({count})
+                    </span>
+                  </Checkbox>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* After 4th Grade Filter */}
-            <Divider />
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                Special Programs
-              </h3>
-              <Checkbox
-                size="sm"
-                isSelected={showAfter4thGradeOnly}
-                onValueChange={setShowAfter4thGradeOnly}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-base">⚡</span>
-                  <span className="text-xs text-default-700">
-                    Entry After 4th Grade Available (
-                    {countSchoolsWithFilter((s) => {
+          {/* Tag Filter */}
+          {tagsLoaded && (
+            <>
+              <Divider />
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => {
+                    const count = countSchoolsWithFilter((s) => {
                       if (
                         selectedSchoolTypes.size > 0 &&
                         !selectedSchoolTypes.has(s.properties.schultyp)
@@ -456,24 +386,83 @@ export function FilterPanel({
                         !selectedDistricts.has(s.properties.bezirk)
                       )
                         return false;
-                      if (selectedTags.size > 0) {
-                        const schoolTagIds = getSchoolTags(s.id).map(
-                          (t) => t.id,
-                        );
-                        const hasAnySelectedTag = Array.from(selectedTags).some(
-                          (tagId) => schoolTagIds.includes(tagId),
-                        );
-                        if (!hasAnySelectedTag) return false;
-                      }
-                      return s.properties.acceptsAfter4thGrade;
-                    })}
-                    )
-                  </span>
+                      if (
+                        showAfter4thGradeOnly &&
+                        !s.properties.acceptsAfter4thGrade
+                      )
+                        return false;
+                      return schoolHasTag(s.id, tag.id);
+                    });
+
+                    return (
+                      <Chip
+                        key={tag.id}
+                        size="sm"
+                        variant={selectedTags.has(tag.id) ? "solid" : "flat"}
+                        style={{
+                          backgroundColor: selectedTags.has(tag.id)
+                            ? tag.color
+                            : `${tag.color}20`,
+                          color: selectedTags.has(tag.id) ? "#fff" : tag.color,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        {tag.name} ({count})
+                      </Chip>
+                    );
+                  })}
                 </div>
-              </Checkbox>
-            </div>
+              </div>
+            </>
+          )}
+
+          {/* After 4th Grade Filter */}
+          <Divider />
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Special Programs
+            </h3>
+            <Checkbox
+              size="sm"
+              isSelected={showAfter4thGradeOnly}
+              onValueChange={setShowAfter4thGradeOnly}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">⚡</span>
+                <span className="text-xs text-default-700">
+                  Entry After 4th Grade Available (
+                  {countSchoolsWithFilter((s) => {
+                    if (
+                      selectedSchoolTypes.size > 0 &&
+                      !selectedSchoolTypes.has(s.properties.schultyp)
+                    )
+                      return false;
+                    if (
+                      selectedCarriers.size > 0 &&
+                      !selectedCarriers.has(s.properties.traeger)
+                    )
+                      return false;
+                    if (
+                      selectedDistricts.size > 0 &&
+                      !selectedDistricts.has(s.properties.bezirk)
+                    )
+                      return false;
+                    if (selectedTags.size > 0) {
+                      const schoolTagIds = getSchoolTags(s.id).map((t) => t.id);
+                      const hasAnySelectedTag = Array.from(selectedTags).some(
+                        (tagId) => schoolTagIds.includes(tagId),
+                      );
+                      if (!hasAnySelectedTag) return false;
+                    }
+                    return s.properties.acceptsAfter4thGrade;
+                  })}
+                  )
+                </span>
+              </div>
+            </Checkbox>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

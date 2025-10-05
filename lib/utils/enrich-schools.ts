@@ -60,8 +60,7 @@ export async function enrichSchoolsWithConstruction(
   );
 
   // Geocode standalone construction projects on server side
-  // const geocodedCoords = await geocodeConstructionProjects(standaloneProjects);
-  const geocodedCoords = new Map();
+  const geocodedCoords = await geocodeConstructionProjects(standaloneProjects);
   // Create features for standalone construction projects with geocoded coordinates
   const constructionFeatures = standaloneProjects
     .map((project) => {

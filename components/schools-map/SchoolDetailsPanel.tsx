@@ -300,14 +300,6 @@ export function SchoolDetailsPanel({
             </div>
           )}
 
-          {/* Travel Time Section */}
-          {!school.properties.isConstructionProject && hasLocation("home") && (
-            <TravelTimeSection
-              schoolCoordinates={school.geometry.coordinates}
-              schoolId={school.id}
-            />
-          )}
-
           {/* AI Summary Button & Content Section */}
           {!school.properties.isConstructionProject && (
             <>
@@ -406,6 +398,14 @@ export function SchoolDetailsPanel({
                 )}
               </div>
             </>
+          )}
+
+          {/* Travel Time Section */}
+          {!school.properties.isConstructionProject && hasLocation("home") && (
+            <TravelTimeSection
+              schoolCoordinates={school.geometry.coordinates}
+              schoolId={school.id}
+            />
           )}
 
           {/* Statistics Section */}

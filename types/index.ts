@@ -22,6 +22,8 @@ export interface SchoolProperties {
   internet: string; // Website URL
   schuljahr: string; // School year (e.g., "2025/26")
   constructionHistory?: ConstructionProject[]; // Associated construction projects
+  isConstructionProject?: boolean; // Flag indicating this is a standalone construction project
+  constructionData?: ConstructionProject; // Original construction project data for standalone projects
 }
 
 export interface SchoolFeature {

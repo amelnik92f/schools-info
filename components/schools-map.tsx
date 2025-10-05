@@ -23,7 +23,6 @@ import {
   ConstructionProject,
   ProjectStatusInfo,
 } from "@/types";
-import { getStandaloneProjects } from "@/lib/utils/enrich-schools";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
@@ -118,12 +117,6 @@ const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibil
 export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
 
-  // Extract standalone construction projects from enriched data
-  const standaloneProjects = useMemo(
-    () => getStandaloneProjects(schoolsData),
-    [schoolsData],
-  );
-
   // Zustand store
   const {
     selectedSchool,
@@ -170,104 +163,6 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   } = useCustomLocationsStore();
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
-
-  // State for selected construction project
-  const [selectedProject, setSelectedProject] = useState<
-    (ConstructionProject & { coordinates: [number, number] }) | null
-  >(null);
-
-  // State for geocoded construction projects (with coordinates)
-  const [geocodedProjects, setGeocodedProjects] = useState<
-    Array<ConstructionProject & { coordinates: [number, number] }>
-  >([]);
-
-  // Geocode construction projects using Nominatim (with caching and batching)
-  useEffect(() => {
-    const geocodeProjects = async () => {
-      // Check if we have cached geocoded projects
-      const cacheKey = "construction-projects-geocoded-v2"; // v2 to invalidate old cache
-      const cached = localStorage.getItem(cacheKey);
-
-      if (cached) {
-        try {
-          const cachedData = JSON.parse(cached);
-          // Check if cache is still valid (24 hours) and matches current standalone projects
-          if (
-            cachedData.timestamp &&
-            Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000 &&
-            cachedData.projectCount === standaloneProjects.length
-          ) {
-            setGeocodedProjects(cachedData.projects);
-            return;
-          }
-        } catch (e) {
-          console.error("Failed to parse cached geocoded projects:", e);
-        }
-      }
-
-      // Geocode in batches with rate limiting
-      const projectsWithCoords: Array<
-        ConstructionProject & { coordinates: [number, number] }
-      > = [];
-
-      // Process only first 100 standalone projects to avoid rate limits
-      const projectsToGeocode = standaloneProjects.slice(0, 100);
-
-      for (let i = 0; i < projectsToGeocode.length; i++) {
-        const project = projectsToGeocode[i];
-        try {
-          // Use Nominatim to geocode the address
-          const address = `${project.strasse}, ${project.plz} ${project.ort}`;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=de`,
-            {
-              headers: {
-                "User-Agent": "Berlin Schools Map App",
-              },
-            },
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.length > 0) {
-              projectsWithCoords.push({
-                ...project,
-                coordinates: [parseFloat(data[0].lon), parseFloat(data[0].lat)],
-              });
-            }
-          }
-
-          // Update progress incrementally
-          if ((i + 1) % 10 === 0 || i === projectsToGeocode.length - 1) {
-            setGeocodedProjects([...projectsWithCoords]);
-          }
-
-          // Add delay to respect Nominatim rate limits (1 request per second)
-          await new Promise((resolve) => setTimeout(resolve, 1100));
-        } catch (error) {
-          console.error(`Failed to geocode project ${project.id}:`, error);
-        }
-      }
-
-      // Cache the results
-      try {
-        localStorage.setItem(
-          cacheKey,
-          JSON.stringify({
-            timestamp: Date.now(),
-            projectCount: standaloneProjects.length,
-            projects: projectsWithCoords,
-          }),
-        );
-      } catch (e) {
-        console.error("Failed to cache geocoded projects:", e);
-      }
-    };
-
-    if (standaloneProjects.length > 0 && geocodedProjects.length === 0) {
-      geocodeProjects();
-    }
-  }, [standaloneProjects, geocodedProjects.length]);
 
   // Extract unique values for filters
   const { schoolTypes, carriers, districts } = useMemo(() => {
@@ -425,9 +320,17 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   {filteredSchools.length} / {schoolsData.features.length}{" "}
                   schools
                 </Chip>
-                {geocodedProjects.length > 0 && (
+                {schoolsData.features.some(
+                  (f) => f.properties.isConstructionProject,
+                ) && (
                   <Chip size="sm" variant="flat" color="warning">
-                    🏗️ {geocodedProjects.length} Construction projects
+                    🏗️{" "}
+                    {
+                      schoolsData.features.filter(
+                        (f) => f.properties.isConstructionProject,
+                      ).length
+                    }{" "}
+                    projects
                   </Chip>
                 )}
               </div>
@@ -890,8 +793,10 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
               </Marker>
             )}
 
-            {/* School Markers */}
+            {/* School and Construction Project Markers */}
             {filteredSchools.map((school) => {
+              const isConstruction =
+                school.properties.isConstructionProject === true;
               const [lng, lat] = school.geometry.coordinates;
               const color = getMarkerColor(school.properties.schultyp);
               const isSelected = selectedSchool?.id === school.id;
@@ -915,119 +820,37 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       isSelected ? "scale-125" : "hover:scale-110"
                     }`}
                     style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50% 50% 50% 0",
-                      backgroundColor: color,
-                      border: isSelected
-                        ? "3px solid #fff"
-                        : hasTag
-                          ? `3px solid ${primaryTag.color}`
-                          : "2px solid white",
-                      transform: "rotate(-45deg)",
-                      boxShadow: isSelected
-                        ? "0 0 0 4px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
-                        : hasTag
-                          ? `0 0 0 2px ${primaryTag.color}, 0 2px 4px rgba(0,0,0,0.3)`
-                          : "0 2px 4px rgba(0,0,0,0.3)",
-                    }}
-                  />
-                </Marker>
-              );
-            })}
-
-            {/* Construction Project Markers */}
-            {geocodedProjects
-              .filter((project) => {
-                // Apply search query filter
-                if (searchQuery) {
-                  const query = searchQuery.toLowerCase();
-                  const matchesSearch =
-                    project.schulname.toLowerCase().includes(query) ||
-                    project.strasse.toLowerCase().includes(query) ||
-                    project.bezirk.toLowerCase().includes(query);
-                  if (!matchesSearch) return false;
-                }
-
-                // Apply school type filter
-                if (
-                  selectedSchoolTypes.size > 0 &&
-                  !selectedSchoolTypes.has(project.schulart)
-                ) {
-                  return false;
-                }
-
-                // Apply district filter
-                if (
-                  selectedDistricts.size > 0 &&
-                  !selectedDistricts.has(project.bezirk)
-                ) {
-                  return false;
-                }
-
-                // Note: Construction projects don't have carrier (traeger) info
-                // so we don't filter by carrier
-
-                return true;
-              })
-              .map((project) => {
-                const [lng, lat] = project.coordinates;
-                const isSelected = selectedProject?.id === project.id;
-                // Get color based on school type, default to indigo if not found
-                const color = getMarkerColor(project.schulart);
-
-                return (
-                  <Marker
-                    key={`construction-${project.id}`}
-                    longitude={lng}
-                    latitude={lat}
-                    anchor="bottom"
-                    onClick={(e) => {
-                      e.originalEvent.stopPropagation();
-                      setSelectedProject(project);
-                      setSelectedSchool(null); // Deselect school if any
-
-                      // Fly to the selected project
-                      const latOffset = 0.01;
-                      if (mapRef.current) {
-                        mapRef.current.flyTo({
-                          center: [lng, lat - latOffset],
-                          zoom: Math.max(mapRef.current.getZoom(), 13),
-                          duration: 1000,
-                          essential: true,
-                        });
-                      }
+                      position: "relative",
+                      width: isConstruction ? "28px" : "24px",
+                      height: isConstruction ? "28px" : "24px",
                     }}
                   >
+                    {/* Main marker (teardrop) */}
                     <div
-                      className={`cursor-pointer transition-all ${
-                        isSelected ? "scale-125" : "hover:scale-110"
-                      }`}
                       style={{
+                        width: isConstruction ? "28px" : "24px",
+                        height: isConstruction ? "28px" : "24px",
+                        borderRadius: "50% 50% 50% 0",
+                        backgroundColor: color,
+                        border: isSelected
+                          ? "3px solid #fff"
+                          : hasTag
+                            ? `3px solid ${primaryTag.color}`
+                            : "2px solid white",
+                        transform: "rotate(-45deg)",
+                        boxShadow: isSelected
+                          ? isConstruction
+                            ? "0 0 0 4px rgba(251, 191, 36, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
+                            : "0 0 0 4px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
+                          : hasTag
+                            ? `0 0 0 2px ${primaryTag.color}, 0 2px 4px rgba(0,0,0,0.3)`
+                            : "0 2px 4px rgba(0,0,0,0.3)",
+                        overflow: isConstruction ? "hidden" : "visible",
                         position: "relative",
-                        width: "28px",
-                        height: "28px",
                       }}
                     >
-                      {/* Main marker (teardrop) with striped overlay */}
-                      <div
-                        style={{
-                          width: "28px",
-                          height: "28px",
-                          borderRadius: "50% 50% 50% 0",
-                          backgroundColor: color,
-                          border: isSelected
-                            ? "3px solid #fff"
-                            : "2px solid white",
-                          transform: "rotate(-45deg)",
-                          boxShadow: isSelected
-                            ? "0 0 0 4px rgba(251, 191, 36, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
-                            : "0 2px 4px rgba(0,0,0,0.3)",
-                          overflow: "hidden",
-                          position: "relative",
-                        }}
-                      >
-                        {/* Diagonal stripes overlay */}
+                      {/* Diagonal stripes overlay for construction projects */}
+                      {isConstruction && (
                         <div
                           style={{
                             position: "absolute",
@@ -1045,11 +868,12 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                             pointerEvents: "none",
                           }}
                         />
-                      </div>
+                      )}
                     </div>
-                  </Marker>
-                );
-              })}
+                  </div>
+                </Marker>
+              );
+            })}
 
             {/* Popup for selected school */}
             {selectedSchool && (
@@ -1065,78 +889,234 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 maxWidth="400px"
               >
                 <div className="p-3 min-w-[280px]">
-                  <h3 className="text-lg font-bold text-foreground mb-2">
-                    {selectedSchool.properties.schulname}
-                  </h3>
+                  {/* Show construction project header if it's a standalone project */}
+                  {selectedSchool.properties.isConstructionProject &&
+                  selectedSchool.properties.constructionData ? (
+                    <>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl">🏗️</span>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-foreground">
+                            {selectedSchool.properties.schulname}
+                          </h3>
+                          <div className="flex gap-2 mt-1">
+                            <Chip size="sm" variant="flat" color="warning">
+                              Construction Project
+                            </Chip>
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color={getStatusColor(
+                                getProjectStatus(
+                                  selectedSchool.properties.constructionData,
+                                ).status,
+                              )}
+                            >
+                              {getStatusLabel(
+                                getProjectStatus(
+                                  selectedSchool.properties.constructionData,
+                                ),
+                              )}
+                            </Chip>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-bold text-foreground mb-2">
+                        {selectedSchool.properties.schulname}
+                      </h3>
 
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      style={{
-                        backgroundColor: `${getMarkerColor(selectedSchool.properties.schultyp)}20`,
-                        color: getMarkerColor(
-                          selectedSchool.properties.schultyp,
-                        ),
-                      }}
-                    >
-                      {selectedSchool.properties.schultyp}
-                    </Chip>
-                    <Chip size="sm" variant="flat" color="default">
-                      {selectedSchool.properties.traeger}
-                    </Chip>
-                  </div>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          style={{
+                            backgroundColor: `${getMarkerColor(selectedSchool.properties.schultyp)}20`,
+                            color: getMarkerColor(
+                              selectedSchool.properties.schultyp,
+                            ),
+                          }}
+                        >
+                          {selectedSchool.properties.schultyp}
+                        </Chip>
+                        <Chip size="sm" variant="flat" color="default">
+                          {selectedSchool.properties.traeger}
+                        </Chip>
+                      </div>
+                    </>
+                  )}
 
-                  <div className="space-y-2 text-sm text-default-700">
-                    <div className="flex items-start gap-2">
-                      <span className="text-base">📍</span>
-                      <span>
-                        {selectedSchool.properties.strasse}{" "}
-                        {selectedSchool.properties.hausnr}
-                        <br />
-                        {selectedSchool.properties.plz} Berlin,{" "}
-                        {selectedSchool.properties.bezirk}
-                      </span>
+                  {/* For construction projects, show construction details */}
+                  {selectedSchool.properties.isConstructionProject &&
+                  selectedSchool.properties.constructionData ? (
+                    <div className="space-y-3 text-sm text-default-700">
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          📍 Location:
+                        </span>
+                        <p className="mt-1">
+                          {selectedSchool.properties.constructionData.strasse}
+                          <br />
+                          {selectedSchool.properties.constructionData.plz}{" "}
+                          {selectedSchool.properties.constructionData.ort},{" "}
+                          {selectedSchool.properties.constructionData.bezirk}
+                        </p>
+                      </div>
+
+                      <Divider />
+
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          🏫 School Type:
+                        </span>
+                        <p className="mt-1">
+                          {selectedSchool.properties.constructionData.schulart}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          🔨 Construction Type:
+                        </span>
+                        <p className="mt-1">
+                          {
+                            selectedSchool.properties.constructionData
+                              .baumassnahme
+                          }
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          📝 Description:
+                        </span>
+                        <p className="mt-1 leading-relaxed">
+                          {
+                            selectedSchool.properties.constructionData
+                              .beschreibung
+                          }
+                        </p>
+                      </div>
+
+                      {selectedSchool.properties.constructionData
+                        .nutzungsuebergabe && (
+                        <div>
+                          <span className="font-semibold text-foreground">
+                            📅 Expected Completion:
+                          </span>
+                          <p className="mt-1">
+                            {
+                              selectedSchool.properties.constructionData
+                                .nutzungsuebergabe
+                            }
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedSchool.properties.constructionData
+                        .gesamtkosten && (
+                        <div>
+                          <span className="font-semibold text-foreground">
+                            💰 Total Cost:
+                          </span>
+                          <p className="mt-1">
+                            {
+                              selectedSchool.properties.constructionData
+                                .gesamtkosten
+                            }
+                          </p>
+                        </div>
+                      )}
+
+                      {(selectedSchool.properties.constructionData
+                        .schulplaetze_nach_baumassnahme !== "k.A." ||
+                        selectedSchool.properties.constructionData
+                          .zuegigkeit_nach_baumassnahme !== "k.A.") && (
+                        <>
+                          <Divider />
+                          <div>
+                            <span className="font-semibold text-foreground">
+                              📊 Capacity After Construction:
+                            </span>
+                            {selectedSchool.properties.constructionData
+                              .schulplaetze_nach_baumassnahme !== "k.A." && (
+                              <p className="mt-1">
+                                Places:{" "}
+                                {
+                                  selectedSchool.properties.constructionData
+                                    .schulplaetze_nach_baumassnahme
+                                }
+                              </p>
+                            )}
+                            {selectedSchool.properties.constructionData
+                              .zuegigkeit_nach_baumassnahme !== "k.A." && (
+                              <p className="mt-1">
+                                Tracks:{" "}
+                                {
+                                  selectedSchool.properties.constructionData
+                                    .zuegigkeit_nach_baumassnahme
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
-
-                    {selectedSchool.properties.telefon && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">📞</span>
-                        <span>{selectedSchool.properties.telefon}</span>
+                  ) : (
+                    <div className="space-y-2 text-sm text-default-700">
+                      <div className="flex items-start gap-2">
+                        <span className="text-base">📍</span>
+                        <span>
+                          {selectedSchool.properties.strasse}{" "}
+                          {selectedSchool.properties.hausnr}
+                          <br />
+                          {selectedSchool.properties.plz} Berlin,{" "}
+                          {selectedSchool.properties.bezirk}
+                        </span>
                       </div>
-                    )}
 
-                    {selectedSchool.properties.email && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">✉️</span>
-                        <Link
-                          href={`mailto:${selectedSchool.properties.email}`}
-                          size="sm"
-                          className="text-primary"
-                        >
-                          {selectedSchool.properties.email}
-                        </Link>
-                      </div>
-                    )}
+                      {selectedSchool.properties.telefon && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">📞</span>
+                          <span>{selectedSchool.properties.telefon}</span>
+                        </div>
+                      )}
 
-                    {selectedSchool.properties.internet && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">🌐</span>
-                        <Link
-                          href={selectedSchool.properties.internet}
-                          isExternal
-                          size="sm"
-                          className="text-primary break-all"
-                        >
-                          {selectedSchool.properties.internet}
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+                      {selectedSchool.properties.email && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">✉️</span>
+                          <Link
+                            href={`mailto:${selectedSchool.properties.email}`}
+                            size="sm"
+                            className="text-primary"
+                          >
+                            {selectedSchool.properties.email}
+                          </Link>
+                        </div>
+                      )}
+
+                      {selectedSchool.properties.internet && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🌐</span>
+                          <Link
+                            href={selectedSchool.properties.internet}
+                            isExternal
+                            size="sm"
+                            className="text-primary break-all"
+                          >
+                            {selectedSchool.properties.internet}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Construction History Section */}
                   {selectedSchool.properties.constructionHistory &&
-                    selectedSchool.properties.constructionHistory.length > 0 && (
+                    selectedSchool.properties.constructionHistory.length >
+                      0 && (
                       <>
                         <Divider className="my-3" />
                         <div>
@@ -1161,7 +1141,9 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                                       <Chip
                                         size="sm"
                                         variant="flat"
-                                        color={getStatusColor(statusInfo.status)}
+                                        color={getStatusColor(
+                                          statusInfo.status,
+                                        )}
                                         className="h-5"
                                       >
                                         {getStatusLabel(statusInfo)}
@@ -1273,133 +1255,6 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 </div>
               </Popup>
             )}
-
-            {/* Popup for selected construction project */}
-            {selectedProject && (
-              <Popup
-                longitude={selectedProject.coordinates[0]}
-                latitude={selectedProject.coordinates[1]}
-                anchor="top"
-                offset={15}
-                onClose={() => setSelectedProject(null)}
-                closeButton={true}
-                closeOnClick={false}
-                className="construction-popup"
-                maxWidth="450px"
-              >
-                <div className="p-4 min-w-[320px]">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl">🏗️</span>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-foreground">
-                        {selectedProject.schulname}
-                      </h3>
-                      <div className="flex gap-2 mt-1">
-                        <Chip size="sm" variant="flat" color="warning">
-                          Construction Project
-                        </Chip>
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          color={getStatusColor(
-                            getProjectStatus(selectedProject).status,
-                          )}
-                        >
-                          {getStatusLabel(getProjectStatus(selectedProject))}
-                        </Chip>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 text-sm text-default-700">
-                    <div>
-                      <span className="font-semibold text-foreground">
-                        📍 Location:
-                      </span>
-                      <p className="mt-1">
-                        {selectedProject.strasse}
-                        <br />
-                        {selectedProject.plz} {selectedProject.ort},{" "}
-                        {selectedProject.bezirk}
-                      </p>
-                    </div>
-
-                    <Divider />
-
-                    <div>
-                      <span className="font-semibold text-foreground">
-                        🏫 School Type:
-                      </span>
-                      <p className="mt-1">{selectedProject.schulart}</p>
-                    </div>
-
-                    <div>
-                      <span className="font-semibold text-foreground">
-                        🔨 Construction Type:
-                      </span>
-                      <p className="mt-1">{selectedProject.baumassnahme}</p>
-                    </div>
-
-                    <div>
-                      <span className="font-semibold text-foreground">
-                        📝 Description:
-                      </span>
-                      <p className="mt-1 leading-relaxed">
-                        {selectedProject.beschreibung}
-                      </p>
-                    </div>
-
-                    {selectedProject.nutzungsuebergabe && (
-                      <div>
-                        <span className="font-semibold text-foreground">
-                          📅 Expected Completion:
-                        </span>
-                        <p className="mt-1">
-                          {selectedProject.nutzungsuebergabe}
-                        </p>
-                      </div>
-                    )}
-
-                    {selectedProject.gesamtkosten && (
-                      <div>
-                        <span className="font-semibold text-foreground">
-                          💰 Total Cost:
-                        </span>
-                        <p className="mt-1">{selectedProject.gesamtkosten}</p>
-                      </div>
-                    )}
-
-                    {(selectedProject.schulplaetze_nach_baumassnahme !==
-                      "k.A." ||
-                      selectedProject.zuegigkeit_nach_baumassnahme !==
-                        "k.A.") && (
-                      <>
-                        <Divider />
-                        <div>
-                          <span className="font-semibold text-foreground">
-                            📊 Capacity After Construction:
-                          </span>
-                          {selectedProject.schulplaetze_nach_baumassnahme !==
-                            "k.A." && (
-                            <p className="mt-1">
-                              Places:{" "}
-                              {selectedProject.schulplaetze_nach_baumassnahme}
-                            </p>
-                          )}
-                          {selectedProject.zuegigkeit_nach_baumassnahme !==
-                            "k.A." && (
-                            <p className="mt-1">
-                              Tracks:{" "}
-                              {selectedProject.zuegigkeit_nach_baumassnahme}
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Popup>
-            )}
           </MapGL>
         </div>
 
@@ -1430,7 +1285,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
             <Divider />
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <div style={{ position: "relative", width: "16px", height: "16px" }}>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "16px",
+                    height: "16px",
+                  }}
+                >
                   <div
                     className="border-2 border-white"
                     style={{

@@ -12,8 +12,8 @@ export default async function Home() {
     fetchConstructionProjects(),
   ]);
 
-  // Enrich schools data with construction information
-  const enrichedSchoolsData = enrichSchoolsWithConstruction(
+  // Enrich schools data with construction information (includes server-side geocoding)
+  const enrichedSchoolsData = await enrichSchoolsWithConstruction(
     schoolsData,
     constructionData.index,
   );

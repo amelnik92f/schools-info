@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import Map, {
   Marker,
   Popup,
@@ -17,8 +17,9 @@ import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
 import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
-import { useSchoolTags } from "@/lib/hooks/use-school-tags";
-import { useCustomLocations } from "@/lib/hooks/use-custom-locations";
+import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
+import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
+import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
@@ -39,32 +40,34 @@ const SCHOOL_TYPE_COLORS: Record<string, string> = {
 
 export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
-  const [selectedSchool, setSelectedSchool] = useState<SchoolFeature | null>(
-    null,
-  );
-  const [viewState, setViewState] = useState({
-    longitude: 13.404954, // Berlin center
-    latitude: 52.520008,
-    zoom: 10,
-  });
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSchoolTypes, setSelectedSchoolTypes] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectedCarriers, setSelectedCarriers] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectedDistricts, setSelectedDistricts] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [showFilters, setShowFilters] = useState(false);
-  const [isSettingLocation, setIsSettingLocation] = useState<LocationType | null>(null);
-  const [selectedCustomLocation, setSelectedCustomLocation] = useState<LocationType | null>(null);
+  // Zustand store
+  const {
+    selectedSchool,
+    setSelectedSchool,
+    viewState,
+    setViewState,
+    searchQuery,
+    setSearchQuery,
+    selectedSchoolTypes,
+    selectedCarriers,
+    selectedDistricts,
+    selectedTags,
+    showFilters,
+    setShowFilters,
+    isSettingLocation,
+    setIsSettingLocation,
+    selectedCustomLocation,
+    setSelectedCustomLocation,
+    toggleSchoolType,
+    toggleCarrier,
+    toggleDistrict,
+    toggleTag,
+    clearAllFilters,
+    hasActiveFilters,
+  } = useSchoolsMapStore();
 
-  // Tags hook
+  // Tags store
   const {
     tags,
     isLoaded: tagsLoaded,
@@ -72,16 +75,16 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     getSchoolTags,
     schoolHasTag,
     getUsedTags,
-  } = useSchoolTags();
+  } = useSchoolTagsStore();
 
-  // Custom locations hook
+  // Custom locations store
   const {
     locations,
     isLoaded: locationsLoaded,
     setLocation,
     removeLocation,
     hasLocation,
-  } = useCustomLocations();
+  } = useCustomLocationsStore();
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
@@ -226,69 +229,6 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     return type === "home" ? "Home" : "Work";
   };
 
-  const toggleSchoolType = (type: string) => {
-    setSelectedSchoolTypes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(type)) {
-        newSet.delete(type);
-      } else {
-        newSet.add(type);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleCarrier = (carrier: string) => {
-    setSelectedCarriers((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(carrier)) {
-        newSet.delete(carrier);
-      } else {
-        newSet.add(carrier);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleDistrict = (district: string) => {
-    setSelectedDistricts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(district)) {
-        newSet.delete(district);
-      } else {
-        newSet.add(district);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleTag = (tagId: string) => {
-    setSelectedTags((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(tagId)) {
-        newSet.delete(tagId);
-      } else {
-        newSet.add(tagId);
-      }
-      return newSet;
-    });
-  };
-
-  const clearAllFilters = () => {
-    setSearchQuery("");
-    setSelectedSchoolTypes(new Set());
-    setSelectedCarriers(new Set());
-    setSelectedDistricts(new Set());
-    setSelectedTags(new Set());
-  };
-
-  const hasActiveFilters =
-    searchQuery ||
-    selectedSchoolTypes.size > 0 ||
-    selectedCarriers.size > 0 ||
-    selectedDistricts.size > 0 ||
-    selectedTags.size > 0;
-
   return (
     <Card className="bg-content1 shadow-medium overflow-hidden">
       <CardBody className="p-0">
@@ -306,7 +246,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 </Chip>
               </div>
               <div className="flex items-center gap-2">
-                {hasActiveFilters && (
+                {hasActiveFilters() && (
                   <Button
                     size="sm"
                     variant="flat"

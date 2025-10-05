@@ -16,8 +16,9 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
-import { SchoolsGeoJSON, SchoolFeature } from "@/types";
+import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
 import { useSchoolTags } from "@/lib/hooks/use-school-tags";
+import { useCustomLocations } from "@/lib/hooks/use-custom-locations";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
@@ -60,6 +61,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   );
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [isSettingLocation, setIsSettingLocation] = useState<LocationType | null>(null);
+  const [selectedCustomLocation, setSelectedCustomLocation] = useState<LocationType | null>(null);
 
   // Tags hook
   const {
@@ -70,6 +73,15 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     schoolHasTag,
     getUsedTags,
   } = useSchoolTags();
+
+  // Custom locations hook
+  const {
+    locations,
+    isLoaded: locationsLoaded,
+    setLocation,
+    removeLocation,
+    hasLocation,
+  } = useCustomLocations();
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
@@ -187,6 +199,33 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     setSelectedSchool(null);
   }, []);
 
+  const handleMapClick = useCallback(
+    (event: any) => {
+      if (isSettingLocation) {
+        const { lngLat } = event;
+        setLocation(isSettingLocation, [lngLat.lng, lngLat.lat]);
+        setIsSettingLocation(null);
+      }
+    },
+    [isSettingLocation, setLocation],
+  );
+
+  const handleCustomLocationClick = useCallback((type: LocationType) => {
+    setSelectedCustomLocation(type);
+  }, []);
+
+  const handleCloseCustomLocationPopup = useCallback(() => {
+    setSelectedCustomLocation(null);
+  }, []);
+
+  const getLocationIcon = (type: LocationType): string => {
+    return type === "home" ? "🏠" : "💼";
+  };
+
+  const getLocationLabel = (type: LocationType): string => {
+    return type === "home" ? "Home" : "Work";
+  };
+
   const toggleSchoolType = (type: string) => {
     setSelectedSchoolTypes((prev) => {
       const newSet = new Set(prev);
@@ -286,6 +325,101 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Custom Location Buttons */}
+            {locationsLoaded && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm font-semibold text-foreground">
+                  📍 My Locations:
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant={hasLocation("home") ? "solid" : "bordered"}
+                    color={isSettingLocation === "home" ? "primary" : "default"}
+                    startContent={<span className="text-base">🏠</span>}
+                    onPress={() => {
+                      if (hasLocation("home")) {
+                        // If location exists, fly to it
+                        const loc = locations.home;
+                        if (loc && mapRef.current) {
+                          mapRef.current.flyTo({
+                            center: loc.coordinates,
+                            zoom: 14,
+                            duration: 1000,
+                          });
+                        }
+                      } else {
+                        // Start setting location
+                        setIsSettingLocation(
+                          isSettingLocation === "home" ? null : "home",
+                        );
+                      }
+                    }}
+                  >
+                    {isSettingLocation === "home"
+                      ? "Click on map..."
+                      : hasLocation("home")
+                        ? "Home"
+                        : "Set Home"}
+                  </Button>
+                  {hasLocation("home") && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      isIconOnly
+                      onPress={() => removeLocation("home")}
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant={hasLocation("work") ? "solid" : "bordered"}
+                    color={isSettingLocation === "work" ? "primary" : "default"}
+                    startContent={<span className="text-base">💼</span>}
+                    onPress={() => {
+                      if (hasLocation("work")) {
+                        // If location exists, fly to it
+                        const loc = locations.work;
+                        if (loc && mapRef.current) {
+                          mapRef.current.flyTo({
+                            center: loc.coordinates,
+                            zoom: 14,
+                            duration: 1000,
+                          });
+                        }
+                      } else {
+                        // Start setting location
+                        setIsSettingLocation(
+                          isSettingLocation === "work" ? null : "work",
+                        );
+                      }
+                    }}
+                  >
+                    {isSettingLocation === "work"
+                      ? "Click on map..."
+                      : hasLocation("work")
+                        ? "Work"
+                        : "Set Work"}
+                  </Button>
+                  {hasLocation("work") && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      isIconOnly
+                      onPress={() => removeLocation("work")}
+                    >
+                      ✕
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Search Input */}
             <Input
@@ -570,14 +704,65 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
             ref={mapRef}
             {...viewState}
             onMove={(evt) => setViewState(evt.viewState)}
+            onClick={handleMapClick}
             style={{ width: "100%", height: "100%" }}
             mapStyle={mapStyle}
             attributionControl={{ compact: true }}
+            cursor={isSettingLocation ? "crosshair" : "grab"}
           >
             {/* Map Controls */}
             <NavigationControl position="top-right" />
             <FullscreenControl position="top-right" />
             <ScaleControl position="bottom-left" />
+
+            {/* Custom Location Markers */}
+            {locationsLoaded && locations.home && (
+              <Marker
+                longitude={locations.home.coordinates[0]}
+                latitude={locations.home.coordinates[1]}
+                anchor="bottom"
+                onClick={(e) => {
+                  e.originalEvent.stopPropagation();
+                  handleCustomLocationClick("home");
+                }}
+              >
+                <div
+                  className="cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "32px",
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                  }}
+                >
+                  🏠
+                </div>
+              </Marker>
+            )}
+
+            {locationsLoaded && locations.work && (
+              <Marker
+                longitude={locations.work.coordinates[0]}
+                latitude={locations.work.coordinates[1]}
+                anchor="bottom"
+                onClick={(e) => {
+                  e.originalEvent.stopPropagation();
+                  handleCustomLocationClick("work");
+                }}
+              >
+                <div
+                  className="cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "32px",
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                  }}
+                >
+                  💼
+                </div>
+              </Marker>
+            )}
 
             {/* School Markers */}
             {filteredSchools.map((school) => {
@@ -741,6 +926,48 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       </div>
                     </>
                   )}
+                </div>
+              </Popup>
+            )}
+
+            {/* Custom Location Popups */}
+            {selectedCustomLocation && locations[selectedCustomLocation] && (
+              <Popup
+                longitude={locations[selectedCustomLocation].coordinates[0]}
+                latitude={locations[selectedCustomLocation].coordinates[1]}
+                anchor="top"
+                offset={20}
+                onClose={handleCloseCustomLocationPopup}
+                closeButton={true}
+                closeOnClick={false}
+                maxWidth="300px"
+              >
+                <div className="p-3 min-w-[200px]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-3xl">
+                      {getLocationIcon(selectedCustomLocation)}
+                    </span>
+                    <h3 className="text-lg font-bold text-foreground">
+                      {getLocationLabel(selectedCustomLocation)}
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-default-700">
+                      📍 Location saved
+                    </p>
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="flat"
+                      fullWidth
+                      onPress={() => {
+                        removeLocation(selectedCustomLocation);
+                        handleCloseCustomLocationPopup();
+                      }}
+                    >
+                      Remove Location
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             )}

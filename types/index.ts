@@ -69,3 +69,12 @@ export interface SchoolTag {
 export interface SchoolTags {
   [schoolId: string]: string[]; // Map of school ID to array of tag IDs
 }
+
+// Custom location markers (Home, Work, etc.)
+export type LocationType = "home" | "work";
+
+export interface CustomLocation {
+  type: LocationType;
+  coordinates: [number, number]; // [longitude, latitude]
+  label?: string; // Optional custom label
+}

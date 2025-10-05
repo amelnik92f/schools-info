@@ -19,7 +19,11 @@ interface FilterPanelProps {
   mapRef: React.RefObject<MapRef>;
 }
 
-export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: FilterPanelProps) {
+export function FilterPanel({
+  schoolsData,
+  filteredSchoolsCount,
+  mapRef,
+}: FilterPanelProps) {
   const {
     searchQuery,
     setSearchQuery,
@@ -101,10 +105,16 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
             <Chip size="sm" variant="flat" color="primary">
               {filteredSchoolsCount} / {schoolsData.features.length} schools
             </Chip>
-            {schoolsData.features.some((f) => f.properties.isConstructionProject) && (
+            {schoolsData.features.some(
+              (f) => f.properties.isConstructionProject,
+            ) && (
               <Chip size="sm" variant="flat" color="warning">
                 🏗️{" "}
-                {schoolsData.features.filter((f) => f.properties.isConstructionProject).length}{" "}
+                {
+                  schoolsData.features.filter(
+                    (f) => f.properties.isConstructionProject,
+                  ).length
+                }{" "}
                 projects
               </Chip>
             )}
@@ -153,7 +163,9 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
                       });
                     }
                   } else {
-                    setIsSettingLocation(isSettingLocation === "home" ? null : "home");
+                    setIsSettingLocation(
+                      isSettingLocation === "home" ? null : "home",
+                    );
                   }
                 }}
               >
@@ -192,7 +204,9 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
                       });
                     }
                   } else {
-                    setIsSettingLocation(isSettingLocation === "work" ? null : "work");
+                    setIsSettingLocation(
+                      isSettingLocation === "work" ? null : "work",
+                    );
                   }
                 }}
               >
@@ -242,9 +256,21 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {schoolTypes.map((type) => {
                   const count = countSchoolsWithFilter((s) => {
-                    if (selectedCarriers.size > 0 && !selectedCarriers.has(s.properties.traeger)) return false;
-                    if (selectedDistricts.size > 0 && !selectedDistricts.has(s.properties.bezirk)) return false;
-                    if (showAfter4thGradeOnly && !s.properties.acceptsAfter4thGrade) return false;
+                    if (
+                      selectedCarriers.size > 0 &&
+                      !selectedCarriers.has(s.properties.traeger)
+                    )
+                      return false;
+                    if (
+                      selectedDistricts.size > 0 &&
+                      !selectedDistricts.has(s.properties.bezirk)
+                    )
+                      return false;
+                    if (
+                      showAfter4thGradeOnly &&
+                      !s.properties.acceptsAfter4thGrade
+                    )
+                      return false;
                     return s.properties.schultyp === type;
                   });
                   return (
@@ -279,9 +305,21 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
               <div className="flex flex-wrap gap-3">
                 {carriers.map((carrier) => {
                   const count = countSchoolsWithFilter((s) => {
-                    if (selectedSchoolTypes.size > 0 && !selectedSchoolTypes.has(s.properties.schultyp)) return false;
-                    if (selectedDistricts.size > 0 && !selectedDistricts.has(s.properties.bezirk)) return false;
-                    if (showAfter4thGradeOnly && !s.properties.acceptsAfter4thGrade) return false;
+                    if (
+                      selectedSchoolTypes.size > 0 &&
+                      !selectedSchoolTypes.has(s.properties.schultyp)
+                    )
+                      return false;
+                    if (
+                      selectedDistricts.size > 0 &&
+                      !selectedDistricts.has(s.properties.bezirk)
+                    )
+                      return false;
+                    if (
+                      showAfter4thGradeOnly &&
+                      !s.properties.acceptsAfter4thGrade
+                    )
+                      return false;
                     return s.properties.traeger === carrier;
                   });
                   return (
@@ -310,9 +348,21 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {districts.map((district) => {
                   const count = countSchoolsWithFilter((s) => {
-                    if (selectedSchoolTypes.size > 0 && !selectedSchoolTypes.has(s.properties.schultyp)) return false;
-                    if (selectedCarriers.size > 0 && !selectedCarriers.has(s.properties.traeger)) return false;
-                    if (showAfter4thGradeOnly && !s.properties.acceptsAfter4thGrade) return false;
+                    if (
+                      selectedSchoolTypes.size > 0 &&
+                      !selectedSchoolTypes.has(s.properties.schultyp)
+                    )
+                      return false;
+                    if (
+                      selectedCarriers.size > 0 &&
+                      !selectedCarriers.has(s.properties.traeger)
+                    )
+                      return false;
+                    if (
+                      showAfter4thGradeOnly &&
+                      !s.properties.acceptsAfter4thGrade
+                    )
+                      return false;
                     return s.properties.bezirk === district;
                   });
                   return (
@@ -342,10 +392,26 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag) => {
                       const count = countSchoolsWithFilter((s) => {
-                        if (selectedSchoolTypes.size > 0 && !selectedSchoolTypes.has(s.properties.schultyp)) return false;
-                        if (selectedCarriers.size > 0 && !selectedCarriers.has(s.properties.traeger)) return false;
-                        if (selectedDistricts.size > 0 && !selectedDistricts.has(s.properties.bezirk)) return false;
-                        if (showAfter4thGradeOnly && !s.properties.acceptsAfter4thGrade) return false;
+                        if (
+                          selectedSchoolTypes.size > 0 &&
+                          !selectedSchoolTypes.has(s.properties.schultyp)
+                        )
+                          return false;
+                        if (
+                          selectedCarriers.size > 0 &&
+                          !selectedCarriers.has(s.properties.traeger)
+                        )
+                          return false;
+                        if (
+                          selectedDistricts.size > 0 &&
+                          !selectedDistricts.has(s.properties.bezirk)
+                        )
+                          return false;
+                        if (
+                          showAfter4thGradeOnly &&
+                          !s.properties.acceptsAfter4thGrade
+                        )
+                          return false;
                         return schoolHasTag(s.id, tag.id);
                       });
 
@@ -358,7 +424,9 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
                             backgroundColor: selectedTags.has(tag.id)
                               ? tag.color
                               : `${tag.color}20`,
-                            color: selectedTags.has(tag.id) ? "#fff" : tag.color,
+                            color: selectedTags.has(tag.id)
+                              ? "#fff"
+                              : tag.color,
                             cursor: "pointer",
                           }}
                           onClick={() => toggleTag(tag.id)}
@@ -388,12 +456,28 @@ export function FilterPanel({ schoolsData, filteredSchoolsCount, mapRef }: Filte
                   <span className="text-xs text-default-700">
                     Entry After 4th Grade Available (
                     {countSchoolsWithFilter((s) => {
-                      if (selectedSchoolTypes.size > 0 && !selectedSchoolTypes.has(s.properties.schultyp)) return false;
-                      if (selectedCarriers.size > 0 && !selectedCarriers.has(s.properties.traeger)) return false;
-                      if (selectedDistricts.size > 0 && !selectedDistricts.has(s.properties.bezirk)) return false;
+                      if (
+                        selectedSchoolTypes.size > 0 &&
+                        !selectedSchoolTypes.has(s.properties.schultyp)
+                      )
+                        return false;
+                      if (
+                        selectedCarriers.size > 0 &&
+                        !selectedCarriers.has(s.properties.traeger)
+                      )
+                        return false;
+                      if (
+                        selectedDistricts.size > 0 &&
+                        !selectedDistricts.has(s.properties.bezirk)
+                      )
+                        return false;
                       if (selectedTags.size > 0) {
-                        const schoolTagIds = getSchoolTags(s.id).map((t) => t.id);
-                        const hasAnySelectedTag = Array.from(selectedTags).some((tagId) => schoolTagIds.includes(tagId));
+                        const schoolTagIds = getSchoolTags(s.id).map(
+                          (t) => t.id,
+                        );
+                        const hasAnySelectedTag = Array.from(selectedTags).some(
+                          (tagId) => schoolTagIds.includes(tagId),
+                        );
                         if (!hasAnySelectedTag) return false;
                       }
                       return s.properties.acceptsAfter4thGrade;

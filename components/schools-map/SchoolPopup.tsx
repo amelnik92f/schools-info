@@ -11,7 +11,12 @@ import { SchoolFeature } from "@/types";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useAISummaryStore } from "@/lib/store/ai-summary-store";
 import { SparklesIcon } from "@/components/icons";
-import { getMarkerColor, getProjectStatus, getStatusColor, getStatusLabel } from "./utils";
+import {
+  getMarkerColor,
+  getProjectStatus,
+  getStatusColor,
+  getStatusLabel,
+} from "./utils";
 
 interface SchoolPopupProps {
   school: SchoolFeature;
@@ -59,7 +64,8 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
     >
       <div className="p-3 min-w-[280px]">
         {/* Show construction project header if it's a standalone project */}
-        {school.properties.isConstructionProject && school.properties.constructionData ? (
+        {school.properties.isConstructionProject &&
+        school.properties.constructionData ? (
           <>
             <div className="flex items-center gap-3 mb-3">
               <span className="text-3xl">🏗️</span>
@@ -75,7 +81,8 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                     size="sm"
                     variant="flat"
                     color={getStatusColor(
-                      getProjectStatus(school.properties.constructionData).status,
+                      getProjectStatus(school.properties.constructionData)
+                        .status,
                     )}
                   >
                     {getStatusLabel(
@@ -121,10 +128,13 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
         )}
 
         {/* For construction projects, show construction details */}
-        {school.properties.isConstructionProject && school.properties.constructionData ? (
+        {school.properties.isConstructionProject &&
+        school.properties.constructionData ? (
           <div className="space-y-3 text-sm text-default-700">
             <div>
-              <span className="font-semibold text-foreground">📍 Location:</span>
+              <span className="font-semibold text-foreground">
+                📍 Location:
+              </span>
               <p className="mt-1">
                 {school.properties.constructionData.strasse}
                 <br />
@@ -137,17 +147,27 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
             <Divider />
 
             <div>
-              <span className="font-semibold text-foreground">🏫 School Type:</span>
-              <p className="mt-1">{school.properties.constructionData.schulart}</p>
+              <span className="font-semibold text-foreground">
+                🏫 School Type:
+              </span>
+              <p className="mt-1">
+                {school.properties.constructionData.schulart}
+              </p>
             </div>
 
             <div>
-              <span className="font-semibold text-foreground">🔨 Construction Type:</span>
-              <p className="mt-1">{school.properties.constructionData.baumassnahme}</p>
+              <span className="font-semibold text-foreground">
+                🔨 Construction Type:
+              </span>
+              <p className="mt-1">
+                {school.properties.constructionData.baumassnahme}
+              </p>
             </div>
 
             <div>
-              <span className="font-semibold text-foreground">📝 Description:</span>
+              <span className="font-semibold text-foreground">
+                📝 Description:
+              </span>
               <p className="mt-1 leading-relaxed">
                 {school.properties.constructionData.beschreibung}
               </p>
@@ -155,34 +175,54 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
 
             {school.properties.constructionData.nutzungsuebergabe && (
               <div>
-                <span className="font-semibold text-foreground">📅 Expected Completion:</span>
-                <p className="mt-1">{school.properties.constructionData.nutzungsuebergabe}</p>
+                <span className="font-semibold text-foreground">
+                  📅 Expected Completion:
+                </span>
+                <p className="mt-1">
+                  {school.properties.constructionData.nutzungsuebergabe}
+                </p>
               </div>
             )}
 
             {school.properties.constructionData.gesamtkosten && (
               <div>
-                <span className="font-semibold text-foreground">💰 Total Cost:</span>
-                <p className="mt-1">{school.properties.constructionData.gesamtkosten}</p>
+                <span className="font-semibold text-foreground">
+                  💰 Total Cost:
+                </span>
+                <p className="mt-1">
+                  {school.properties.constructionData.gesamtkosten}
+                </p>
               </div>
             )}
 
-            {(school.properties.constructionData.schulplaetze_nach_baumassnahme !== "k.A." ||
-              school.properties.constructionData.zuegigkeit_nach_baumassnahme !== "k.A.") && (
+            {(school.properties.constructionData
+              .schulplaetze_nach_baumassnahme !== "k.A." ||
+              school.properties.constructionData
+                .zuegigkeit_nach_baumassnahme !== "k.A.") && (
               <>
                 <Divider />
                 <div>
                   <span className="font-semibold text-foreground">
                     📊 Capacity After Construction:
                   </span>
-                  {school.properties.constructionData.schulplaetze_nach_baumassnahme !== "k.A." && (
+                  {school.properties.constructionData
+                    .schulplaetze_nach_baumassnahme !== "k.A." && (
                     <p className="mt-1">
-                      Places: {school.properties.constructionData.schulplaetze_nach_baumassnahme}
+                      Places:{" "}
+                      {
+                        school.properties.constructionData
+                          .schulplaetze_nach_baumassnahme
+                      }
                     </p>
                   )}
-                  {school.properties.constructionData.zuegigkeit_nach_baumassnahme !== "k.A." && (
+                  {school.properties.constructionData
+                    .zuegigkeit_nach_baumassnahme !== "k.A." && (
                     <p className="mt-1">
-                      Tracks: {school.properties.constructionData.zuegigkeit_nach_baumassnahme}
+                      Tracks:{" "}
+                      {
+                        school.properties.constructionData
+                          .zuegigkeit_nach_baumassnahme
+                      }
                     </p>
                   )}
                 </div>
@@ -210,7 +250,11 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
             {school.properties.email && (
               <div className="flex items-center gap-2">
                 <span className="text-base">✉️</span>
-                <Link href={`mailto:${school.properties.email}`} size="sm" className="text-primary">
+                <Link
+                  href={`mailto:${school.properties.email}`}
+                  size="sm"
+                  className="text-primary"
+                >
                   {school.properties.email}
                 </Link>
               </div>
@@ -248,7 +292,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                       className="flex items-center justify-center w-4 h-4 rounded-full bg-default-200 hover:bg-default-300 transition-colors cursor-help"
                       aria-label="Information about AI summary"
                     >
-                      <span className="text-[10px] text-default-600 font-semibold">?</span>
+                      <span className="text-[10px] text-default-600 font-semibold">
+                        ?
+                      </span>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="max-w-[280px]">
@@ -257,8 +303,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                         ⚠️ AI-Generated Content
                       </div>
                       <p className="text-xs text-default-600 leading-relaxed">
-                        This summary is generated by AI and may contain inaccuracies. Please verify
-                        important information directly with the school or visit their official
+                        This summary is generated by AI and may contain
+                        inaccuracies. Please verify important information
+                        directly with the school or visit their official
                         website.
                       </p>
                     </div>
@@ -267,31 +314,32 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
               </div>
 
               {/* Summarize Button - Only show if no summary */}
-              {!getSummary(school.properties.bsn) && !getSummaryError(school.properties.bsn) && (
-                <Button
-                  size="sm"
-                  variant="solid"
-                  fullWidth
-                  startContent={
-                    isSummaryLoading(school.properties.bsn) ? (
-                      <Spinner size="sm" color="white" />
-                    ) : (
-                      <SparklesIcon size={16} />
-                    )
-                  }
-                  onPress={handleSummarizeSchool}
-                  isDisabled={isSummaryLoading(school.properties.bsn)}
-                  className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
-                  }}
-                >
-                  {isSummaryLoading(school.properties.bsn)
-                    ? "Summarizing..."
-                    : "Generate AI Summary"}
-                </Button>
-              )}
+              {!getSummary(school.properties.bsn) &&
+                !getSummaryError(school.properties.bsn) && (
+                  <Button
+                    size="sm"
+                    variant="solid"
+                    fullWidth
+                    startContent={
+                      isSummaryLoading(school.properties.bsn) ? (
+                        <Spinner size="sm" color="white" />
+                      ) : (
+                        <SparklesIcon size={16} />
+                      )
+                    }
+                    onPress={handleSummarizeSchool}
+                    isDisabled={isSummaryLoading(school.properties.bsn)}
+                    className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+                    }}
+                  >
+                    {isSummaryLoading(school.properties.bsn)
+                      ? "Summarizing..."
+                      : "Generate AI Summary"}
+                  </Button>
+                )}
 
               {/* AI Summary Content */}
               {getSummaryError(school.properties.bsn) && (
@@ -312,7 +360,10 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                             /\*\*(.*?)\*\*/g,
                             '<strong class="text-foreground font-semibold">$1</strong>',
                           )
-                          .replace(/^• /gm, '<span class="text-primary">•</span> ')
+                          .replace(
+                            /^• /gm,
+                            '<span class="text-primary">•</span> ',
+                          )
                           .replace(/\n/g, "<br />"),
                       }}
                     />
@@ -340,7 +391,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                 <div className="p-3 rounded-lg bg-content2">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-base">👨‍🎓</span>
-                    <span className="text-xs font-semibold text-foreground">Students</span>
+                    <span className="text-xs font-semibold text-foreground">
+                      Students
+                    </span>
                   </div>
                   <div className="space-y-1 text-xs text-default-700">
                     <div className="flex justify-between">
@@ -351,11 +404,15 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                     </div>
                     <div className="flex justify-between">
                       <span>Female:</span>
-                      <span>{school.properties.stats.schuelerWeiblich.toLocaleString()}</span>
+                      <span>
+                        {school.properties.stats.schuelerWeiblich.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Male:</span>
-                      <span>{school.properties.stats.schuelerMaennlich.toLocaleString()}</span>
+                      <span>
+                        {school.properties.stats.schuelerMaennlich.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -364,7 +421,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                 <div className="p-3 rounded-lg bg-content2">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-base">👨‍🏫</span>
-                    <span className="text-xs font-semibold text-foreground">Teachers</span>
+                    <span className="text-xs font-semibold text-foreground">
+                      Teachers
+                    </span>
                   </div>
                   <div className="space-y-1 text-xs text-default-700">
                     <div className="flex justify-between">
@@ -375,11 +434,15 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                     </div>
                     <div className="flex justify-between">
                       <span>Female:</span>
-                      <span>{school.properties.stats.lehrkraefteWeiblich.toLocaleString()}</span>
+                      <span>
+                        {school.properties.stats.lehrkraefteWeiblich.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Male:</span>
-                      <span>{school.properties.stats.lehrkraefteMaennlich.toLocaleString()}</span>
+                      <span>
+                        {school.properties.stats.lehrkraefteMaennlich.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -389,7 +452,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
               {school.properties.stats.lehrkraefteGesamt > 0 && (
                 <div className="mt-3 p-2 rounded-lg bg-primary/10">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-foreground font-semibold">📈 Student-Teacher Ratio:</span>
+                    <span className="text-foreground font-semibold">
+                      📈 Student-Teacher Ratio:
+                    </span>
                     <span className="text-foreground font-bold">
                       {(
                         school.properties.stats.schuelerGesamt /
@@ -419,7 +484,10 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                   {school.properties.constructionHistory.map((project) => {
                     const statusInfo = getProjectStatus(project);
                     return (
-                      <div key={project.id} className="p-2 rounded-lg bg-content2">
+                      <div
+                        key={project.id}
+                        className="p-2 rounded-lg bg-content2"
+                      >
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <span className="text-xs font-semibold text-foreground">
                             {project.baumassnahme}
@@ -439,7 +507,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
                           </p>
                         )}
                         {project.gesamtkosten && (
-                          <p className="text-xs text-default-500 mt-1">💰 {project.gesamtkosten}</p>
+                          <p className="text-xs text-default-500 mt-1">
+                            💰 {project.gesamtkosten}
+                          </p>
                         )}
                       </div>
                     );
@@ -455,7 +525,9 @@ export function SchoolPopup({ school, onClose }: SchoolPopupProps) {
             <Divider className="my-3" />
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-semibold text-foreground">🏷️ Tags</span>
+                <span className="text-sm font-semibold text-foreground">
+                  🏷️ Tags
+                </span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => {

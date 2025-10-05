@@ -105,38 +105,6 @@ export default async function Home() {
 
       {/* Map */}
       <SchoolsMap schoolsData={enrichedSchoolsData} />
-
-      {/* Info Section */}
-      <Card className="bg-content1 shadow-medium">
-        <CardBody className="gap-4 p-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-              <span className="text-2xl">ℹ️</span>
-            </div>
-            <h2 className="text-2xl font-bold text-foreground">
-              About This Map
-            </h2>
-          </div>
-          <p className="text-base text-default-700 leading-relaxed">
-            This interactive map displays all schools in Berlin, sourced from
-            the official Berlin geodata infrastructure (GDI). Click on any
-            marker to view detailed information about a school, including its
-            address, contact details, and website.
-          </p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <Chip size="sm" variant="flat" color="primary">
-              Data Source: Berlin GDI
-            </Chip>
-            <Chip size="sm" variant="flat" color="secondary">
-              School Year:{" "}
-              {schoolsData.features[0]?.properties.schuljahr || "2025/26"}
-            </Chip>
-            <Chip size="sm" variant="flat" color="success">
-              Updated: {new Date(schoolsData.timeStamp).toLocaleDateString()}
-            </Chip>
-          </div>
-        </CardBody>
-      </Card>
     </div>
   );
 }

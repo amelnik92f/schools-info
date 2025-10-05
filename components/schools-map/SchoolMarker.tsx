@@ -9,9 +9,13 @@ interface SchoolMarkerProps {
   onClick: (school: SchoolFeature) => void;
 }
 
-export function SchoolMarker({ school, isSelected, onClick }: SchoolMarkerProps) {
+export function SchoolMarker({
+  school,
+  isSelected,
+  onClick,
+}: SchoolMarkerProps) {
   const { getSchoolTags } = useSchoolTagsStore();
-  
+
   const isConstruction = school.properties.isConstructionProject === true;
   const [lng, lat] = school.geometry.coordinates;
   const color = getMarkerColor(school.properties.schultyp);

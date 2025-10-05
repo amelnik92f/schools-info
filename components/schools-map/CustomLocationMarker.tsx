@@ -7,7 +7,11 @@ interface CustomLocationMarkerProps {
   onClick: (type: LocationType) => void;
 }
 
-export function CustomLocationMarker({ type, coordinates, onClick }: CustomLocationMarkerProps) {
+export function CustomLocationMarker({
+  type,
+  coordinates,
+  onClick,
+}: CustomLocationMarkerProps) {
   const icon = type === "home" ? "🏠" : "💼";
 
   return (

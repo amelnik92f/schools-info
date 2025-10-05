@@ -16,7 +16,9 @@ export const SCHOOL_TYPE_COLORS: Record<string, string> = {
 export const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibility
 
 // Helper function to get project status
-export const getProjectStatus = (project: ConstructionProject): ProjectStatusInfo => {
+export const getProjectStatus = (
+  project: ConstructionProject,
+): ProjectStatusInfo => {
   const dateStr = project.nutzungsuebergabe;
   const currentYear = 2025; // October 2025
 

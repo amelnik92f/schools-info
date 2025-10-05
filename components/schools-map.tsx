@@ -122,22 +122,25 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     getSchoolTags,
   ]);
 
-  const handleMarkerClick = useCallback((school: SchoolFeature) => {
-    setSelectedSchool(school);
+  const handleMarkerClick = useCallback(
+    (school: SchoolFeature) => {
+      setSelectedSchool(school);
 
-    // Smoothly fly to the selected school with animation
-    const [lng, lat] = school.geometry.coordinates;
-    const latOffset = 0.01; // Offset to position popup nicely
+      // Smoothly fly to the selected school with animation
+      const [lng, lat] = school.geometry.coordinates;
+      const latOffset = 0.01; // Offset to position popup nicely
 
-    if (mapRef.current) {
-      mapRef.current.flyTo({
-        center: [lng, lat - latOffset],
-        zoom: Math.max(mapRef.current.getZoom(), 13),
-        duration: 1000, // 1 second animation
-        essential: true,
-      });
-    }
-  }, [setSelectedSchool]);
+      if (mapRef.current) {
+        mapRef.current.flyTo({
+          center: [lng, lat - latOffset],
+          zoom: Math.max(mapRef.current.getZoom(), 13),
+          duration: 1000, // 1 second animation
+          essential: true,
+        });
+      }
+    },
+    [setSelectedSchool],
+  );
 
   const handleClosePopup = useCallback(() => {
     setSelectedSchool(null);
@@ -154,9 +157,12 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     [isSettingLocation, setLocation, setIsSettingLocation],
   );
 
-  const handleCustomLocationClick = useCallback((type: LocationType) => {
-    setSelectedCustomLocation(type);
-  }, [setSelectedCustomLocation]);
+  const handleCustomLocationClick = useCallback(
+    (type: LocationType) => {
+      setSelectedCustomLocation(type);
+    },
+    [setSelectedCustomLocation],
+  );
 
   const handleCloseCustomLocationPopup = useCallback(() => {
     setSelectedCustomLocation(null);

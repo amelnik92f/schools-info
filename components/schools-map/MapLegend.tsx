@@ -5,9 +5,7 @@ export function MapLegend() {
   return (
     <div className="p-4 bg-content2 border-t border-divider">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-sm font-semibold text-foreground">
-          Legend:
-        </span>
+        <span className="text-sm font-semibold text-foreground">Legend:</span>
       </div>
       <div className="space-y-3">
         <div>

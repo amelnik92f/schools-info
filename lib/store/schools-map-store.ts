@@ -58,101 +58,103 @@ interface SchoolsMapState {
 export const useSchoolsMapStore = create<SchoolsMapState>()(
   persist(
     (set, get) => ({
-  // Initial states
-  selectedSchool: null,
-  setSelectedSchool: (school) => set({ selectedSchool: school }),
+      // Initial states
+      selectedSchool: null,
+      setSelectedSchool: (school) => set({ selectedSchool: school }),
 
-  viewState: {
-    longitude: 13.404954, // Berlin center
-    latitude: 52.520008,
-    zoom: 10,
-  },
-  setViewState: (viewState) => set({ viewState }),
+      viewState: {
+        longitude: 13.404954, // Berlin center
+        latitude: 52.520008,
+        zoom: 10,
+      },
+      setViewState: (viewState) => set({ viewState }),
 
-  searchQuery: "",
-  setSearchQuery: (query) => set({ searchQuery: query }),
-
-  selectedSchoolTypes: new Set(),
-  setSelectedSchoolTypes: (types) => set({ selectedSchoolTypes: types }),
-  toggleSchoolType: (type) =>
-    set((state) => {
-      const newSet = new Set(state.selectedSchoolTypes);
-      if (newSet.has(type)) {
-        newSet.delete(type);
-      } else {
-        newSet.add(type);
-      }
-      return { selectedSchoolTypes: newSet };
-    }),
-
-  selectedCarriers: new Set(),
-  setSelectedCarriers: (carriers) => set({ selectedCarriers: carriers }),
-  toggleCarrier: (carrier) =>
-    set((state) => {
-      const newSet = new Set(state.selectedCarriers);
-      if (newSet.has(carrier)) {
-        newSet.delete(carrier);
-      } else {
-        newSet.add(carrier);
-      }
-      return { selectedCarriers: newSet };
-    }),
-
-  selectedDistricts: new Set(),
-  setSelectedDistricts: (districts) => set({ selectedDistricts: districts }),
-  toggleDistrict: (district) =>
-    set((state) => {
-      const newSet = new Set(state.selectedDistricts);
-      if (newSet.has(district)) {
-        newSet.delete(district);
-      } else {
-        newSet.add(district);
-      }
-      return { selectedDistricts: newSet };
-    }),
-
-  selectedTags: new Set(),
-  setSelectedTags: (tags) => set({ selectedTags: tags }),
-  toggleTag: (tagId) =>
-    set((state) => {
-      const newSet = new Set(state.selectedTags);
-      if (newSet.has(tagId)) {
-        newSet.delete(tagId);
-      } else {
-        newSet.add(tagId);
-      }
-      return { selectedTags: newSet };
-    }),
-
-  showFilters: false,
-  setShowFilters: (show) => set({ showFilters: show }),
-
-  isSettingLocation: null,
-  setIsSettingLocation: (type) => set({ isSettingLocation: type }),
-
-  selectedCustomLocation: null,
-  setSelectedCustomLocation: (type) => set({ selectedCustomLocation: type }),
-
-  clearAllFilters: () =>
-    set({
       searchQuery: "",
-      selectedSchoolTypes: new Set(),
-      selectedCarriers: new Set(),
-      selectedDistricts: new Set(),
-      selectedTags: new Set(),
-    }),
+      setSearchQuery: (query) => set({ searchQuery: query }),
 
-  hasActiveFilters: () => {
-    const state = get();
-    return (
-      state.searchQuery !== "" ||
-      state.selectedSchoolTypes.size > 0 ||
-      state.selectedCarriers.size > 0 ||
-      state.selectedDistricts.size > 0 ||
-      state.selectedTags.size > 0
-    );
-  },
-}),
+      selectedSchoolTypes: new Set(),
+      setSelectedSchoolTypes: (types) => set({ selectedSchoolTypes: types }),
+      toggleSchoolType: (type) =>
+        set((state) => {
+          const newSet = new Set(state.selectedSchoolTypes);
+          if (newSet.has(type)) {
+            newSet.delete(type);
+          } else {
+            newSet.add(type);
+          }
+          return { selectedSchoolTypes: newSet };
+        }),
+
+      selectedCarriers: new Set(),
+      setSelectedCarriers: (carriers) => set({ selectedCarriers: carriers }),
+      toggleCarrier: (carrier) =>
+        set((state) => {
+          const newSet = new Set(state.selectedCarriers);
+          if (newSet.has(carrier)) {
+            newSet.delete(carrier);
+          } else {
+            newSet.add(carrier);
+          }
+          return { selectedCarriers: newSet };
+        }),
+
+      selectedDistricts: new Set(),
+      setSelectedDistricts: (districts) =>
+        set({ selectedDistricts: districts }),
+      toggleDistrict: (district) =>
+        set((state) => {
+          const newSet = new Set(state.selectedDistricts);
+          if (newSet.has(district)) {
+            newSet.delete(district);
+          } else {
+            newSet.add(district);
+          }
+          return { selectedDistricts: newSet };
+        }),
+
+      selectedTags: new Set(),
+      setSelectedTags: (tags) => set({ selectedTags: tags }),
+      toggleTag: (tagId) =>
+        set((state) => {
+          const newSet = new Set(state.selectedTags);
+          if (newSet.has(tagId)) {
+            newSet.delete(tagId);
+          } else {
+            newSet.add(tagId);
+          }
+          return { selectedTags: newSet };
+        }),
+
+      showFilters: false,
+      setShowFilters: (show) => set({ showFilters: show }),
+
+      isSettingLocation: null,
+      setIsSettingLocation: (type) => set({ isSettingLocation: type }),
+
+      selectedCustomLocation: null,
+      setSelectedCustomLocation: (type) =>
+        set({ selectedCustomLocation: type }),
+
+      clearAllFilters: () =>
+        set({
+          searchQuery: "",
+          selectedSchoolTypes: new Set(),
+          selectedCarriers: new Set(),
+          selectedDistricts: new Set(),
+          selectedTags: new Set(),
+        }),
+
+      hasActiveFilters: () => {
+        const state = get();
+        return (
+          state.searchQuery !== "" ||
+          state.selectedSchoolTypes.size > 0 ||
+          state.selectedCarriers.size > 0 ||
+          state.selectedDistricts.size > 0 ||
+          state.selectedTags.size > 0
+        );
+      },
+    }),
     {
       name: "schools-map-filters",
       // Custom storage to handle Set serialization

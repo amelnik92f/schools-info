@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
-import {
-  fetchTravelTimes,
-  formatDuration,
-  TravelTime,
-  TRAVEL_MODES,
-} from "@/lib/utils/travel-time";
+import { useTravelTimeStore } from "@/lib/store/travel-time-store";
+import { formatDuration, TRAVEL_MODES } from "@/lib/utils/travel-time";
 
 interface TravelTimeSectionProps {
   schoolCoordinates: [number, number]; // [longitude, latitude]
@@ -21,33 +17,51 @@ export function TravelTimeSection({
   schoolId,
 }: TravelTimeSectionProps) {
   const { getLocation, hasLocation } = useCustomLocationsStore();
+  const {
+    getTravelTimes,
+    fetchAndCacheTravelTimes,
+    isLoading: isLoadingFromStore,
+  } = useTravelTimeStore();
 
-  const [travelTimesFromHome, setTravelTimesFromHome] = useState<
-    TravelTime[] | null
-  >(null);
-  const [isLoadingTravelTimes, setIsLoadingTravelTimes] = useState(false);
+  // Get home coordinates
+  const homeLocation = hasLocation("home") ? getLocation("home") : null;
+  const homeCoordinates = homeLocation?.coordinates;
+
+  // Get cached travel times or null
+  const travelTimesFromHome = homeCoordinates
+    ? getTravelTimes(homeCoordinates, schoolCoordinates)
+    : null;
+
+  // Check loading state
+  const isLoadingTravelTimes = homeCoordinates
+    ? isLoadingFromStore(homeCoordinates, schoolCoordinates)
+    : false;
 
   // Fetch travel times when school or home location changes
   useEffect(() => {
     const loadTravelTimes = async () => {
-      if (!hasLocation("home")) {
-        setTravelTimesFromHome(null);
+      if (!homeCoordinates) {
         return;
       }
 
-      setIsLoadingTravelTimes(true);
-      setTravelTimesFromHome(null);
+      // Check if already cached
+      const cached = getTravelTimes(homeCoordinates, schoolCoordinates);
+      if (cached) {
+        return; // Already have data
+      }
 
-      const times = await fetchTravelTimes(
-        getLocation("home")!.coordinates,
-        schoolCoordinates,
-      );
-      setTravelTimesFromHome(times);
-      setIsLoadingTravelTimes(false);
+      // Fetch and cache
+      await fetchAndCacheTravelTimes(homeCoordinates, schoolCoordinates);
     };
 
     loadTravelTimes();
-  }, [schoolId, hasLocation, getLocation, schoolCoordinates]);
+  }, [
+    schoolId,
+    homeCoordinates,
+    schoolCoordinates,
+    getTravelTimes,
+    fetchAndCacheTravelTimes,
+  ]);
 
   // Don't render if no home location is set
   if (!hasLocation("home")) {

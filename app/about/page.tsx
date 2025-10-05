@@ -60,25 +60,6 @@ export default function AboutPage() {
             <CardBody className="gap-4 p-8">
               <div className="flex items-center gap-3 mb-2">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                  <span className="text-2xl">🔒</span>
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  Privacy & Data Storage
-                </h2>
-              </div>
-              <p className="text-base text-default-700 leading-relaxed">
-                Your privacy matters. All information you interact with on this
-                platform is stored locally in your browser only. Nothing is sent
-                to external servers, and no tracking or analytics are used. Your
-                data stays on your device and is never shared or collected.
-              </p>
-            </CardBody>
-          </Card>
-
-          <Card className="bg-content1 shadow-medium">
-            <CardBody className="gap-4 p-8">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <span className="text-2xl">📊</span>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">

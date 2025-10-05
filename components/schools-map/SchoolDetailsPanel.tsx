@@ -9,7 +9,9 @@ import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
 import { SchoolFeature } from "@/types";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useAISummaryStore } from "@/lib/store/ai-summary-store";
+import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import { SparklesIcon } from "@/components/icons";
+import { TravelTimeSection } from "./TravelTimeSection";
 import {
   getMarkerColor,
   getProjectStatus,
@@ -39,6 +41,8 @@ export function SchoolDetailsPanel({
     getError: getSummaryError,
     fetchSummary,
   } = useAISummaryStore();
+
+  const { hasLocation } = useCustomLocationsStore();
 
   const handleSummarizeSchool = async () => {
     await fetchSummary({
@@ -294,6 +298,14 @@ export function SchoolDetailsPanel({
                 </div>
               )}
             </div>
+          )}
+
+          {/* Travel Time Section */}
+          {!school.properties.isConstructionProject && hasLocation("home") && (
+            <TravelTimeSection
+              schoolCoordinates={school.geometry.coordinates}
+              schoolId={school.id}
+            />
           )}
 
           {/* AI Summary Button & Content Section */}

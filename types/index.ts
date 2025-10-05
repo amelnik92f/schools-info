@@ -4,6 +4,19 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
+// School Statistics Types
+export interface SchoolStats {
+  schuljahr: string; // School year (e.g., "2024/25")
+  bsn: string; // School number (BSN)
+  name: string; // School name
+  schuelerGesamt: number; // Total students (m/w/d)
+  schuelerWeiblich: number; // Female students
+  schuelerMaennlich: number; // Male students
+  lehrkraefteGesamt: number; // Total teachers (m/w/d)
+  lehrkraefteWeiblich: number; // Female teachers
+  lehrkraefteMaennlich: number; // Male teachers
+}
+
 // Berlin Schools WFS API Types
 export interface SchoolProperties {
   bsn: string; // School number (e.g., "01B01")
@@ -24,6 +37,7 @@ export interface SchoolProperties {
   constructionHistory?: ConstructionProject[]; // Associated construction projects
   isConstructionProject?: boolean; // Flag indicating this is a standalone construction project
   constructionData?: ConstructionProject; // Original construction project data for standalone projects
+  stats?: SchoolStats; // School statistics (students, teachers)
 }
 
 export interface SchoolFeature {

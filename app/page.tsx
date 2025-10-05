@@ -3,20 +3,26 @@ import { Chip } from "@heroui/chip";
 import { title, subtitle } from "@/components/primitives";
 import { fetchBerlinSchools } from "@/lib/api/schools";
 import { fetchConstructionProjects } from "@/lib/api/construction-projects";
+import { fetchSchoolStats } from "@/lib/api/school-stats";
 import { enrichSchoolsWithConstruction } from "@/lib/utils/enrich-schools";
+import { enrichSchoolsWithStats } from "@/lib/utils/enrich-schools-with-stats";
 import { SchoolsMap } from "@/components/schools-map";
 
 export default async function Home() {
-  const [schoolsData, constructionData] = await Promise.all([
+  const [schoolsData, constructionData, statsMap] = await Promise.all([
     fetchBerlinSchools(),
     fetchConstructionProjects(),
+    fetchSchoolStats(),
   ]);
 
   // Enrich schools data with construction information (includes server-side geocoding)
-  const enrichedSchoolsData = await enrichSchoolsWithConstruction(
+  let enrichedSchoolsData = await enrichSchoolsWithConstruction(
     schoolsData,
     constructionData.index,
   );
+
+  // Enrich schools data with statistics
+  enrichedSchoolsData = enrichSchoolsWithStats(enrichedSchoolsData, statsMap);
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto py-8 px-4">

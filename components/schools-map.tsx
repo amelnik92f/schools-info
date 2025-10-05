@@ -1113,6 +1113,99 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                     </div>
                   )}
 
+                  {/* Statistics Section */}
+                  {selectedSchool.properties.stats && (
+                    <>
+                      <Divider className="my-3" />
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm font-semibold text-foreground">
+                            📊 Statistics ({selectedSchool.properties.stats.schuljahr})
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Students Section */}
+                          <div className="p-3 rounded-lg bg-content2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-base">👨‍🎓</span>
+                              <span className="text-xs font-semibold text-foreground">
+                                Students
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-xs text-default-700">
+                              <div className="flex justify-between">
+                                <span>Total:</span>
+                                <span className="font-semibold">
+                                  {selectedSchool.properties.stats.schuelerGesamt.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Female:</span>
+                                <span>
+                                  {selectedSchool.properties.stats.schuelerWeiblich.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Male:</span>
+                                <span>
+                                  {selectedSchool.properties.stats.schuelerMaennlich.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Teachers Section */}
+                          <div className="p-3 rounded-lg bg-content2">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-base">👨‍🏫</span>
+                              <span className="text-xs font-semibold text-foreground">
+                                Teachers
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-xs text-default-700">
+                              <div className="flex justify-between">
+                                <span>Total:</span>
+                                <span className="font-semibold">
+                                  {selectedSchool.properties.stats.lehrkraefteGesamt.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Female:</span>
+                                <span>
+                                  {selectedSchool.properties.stats.lehrkraefteWeiblich.toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Male:</span>
+                                <span>
+                                  {selectedSchool.properties.stats.lehrkraefteMaennlich.toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Student-Teacher Ratio */}
+                        {selectedSchool.properties.stats.lehrkraefteGesamt > 0 && (
+                          <div className="mt-3 p-2 rounded-lg bg-primary/10">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-foreground font-semibold">
+                                📈 Student-Teacher Ratio:
+                              </span>
+                              <span className="text-foreground font-bold">
+                                {(
+                                  selectedSchool.properties.stats.schuelerGesamt /
+                                  selectedSchool.properties.stats.lehrkraefteGesamt
+                                ).toFixed(1)}
+                                :1
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
                   {/* Construction History Section */}
                   {selectedSchool.properties.constructionHistory &&
                     selectedSchool.properties.constructionHistory.length >

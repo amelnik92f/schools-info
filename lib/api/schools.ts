@@ -46,30 +46,3 @@ export async function fetchBerlinSchools(): Promise<SchoolsGeoJSON> {
     throw error;
   }
 }
-
-/**
- * Fetches schools data with optional filtering by district (Bezirk)
- *
- * @param bezirk - Optional district name to filter by
- * @returns Promise with GeoJSON FeatureCollection of schools
- */
-export async function fetchSchoolsByDistrict(
-  bezirk?: string,
-): Promise<SchoolsGeoJSON> {
-  const data = await fetchBerlinSchools();
-
-  if (!bezirk) {
-    return data;
-  }
-
-  // Filter features by district
-  const filteredFeatures = data.features.filter(
-    (feature) => feature.properties.bezirk === bezirk,
-  );
-
-  return {
-    ...data,
-    features: filteredFeatures,
-    numberReturned: filteredFeatures.length,
-  };
-}

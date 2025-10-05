@@ -28,6 +28,7 @@ import {
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
+import { useAISummaryStore } from "@/lib/store/ai-summary-store";
 import { SparklesIcon } from "@/components/icons";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -120,11 +121,6 @@ const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibil
 export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
 
-  // AI Summary state
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-
   // Zustand store
   const {
     selectedSchool,
@@ -171,6 +167,14 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     removeLocation,
     hasLocation,
   } = useCustomLocationsStore();
+
+  // AI Summary store
+  const {
+    getSummary,
+    isLoading: isSummaryLoading,
+    getError: getSummaryError,
+    fetchSummary,
+  } = useAISummaryStore();
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
@@ -292,76 +296,21 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   const handleClosePopup = useCallback(() => {
     setSelectedSchool(null);
-    setAiSummary(null);
-    setSummaryError(null);
   }, []);
-
-  // Load AI summary from localStorage when school is selected
-  useEffect(() => {
-    if (selectedSchool && !selectedSchool.properties.isConstructionProject) {
-      const storageKey = `ai-summary-${selectedSchool.properties.bsn}`;
-      try {
-        const cachedSummary = localStorage.getItem(storageKey);
-        if (cachedSummary) {
-          setAiSummary(cachedSummary);
-        } else {
-          setAiSummary(null);
-        }
-      } catch (error) {
-        console.error("Error loading cached summary:", error);
-      }
-    } else {
-      setAiSummary(null);
-    }
-    setSummaryError(null);
-  }, [selectedSchool]);
 
   // Function to fetch AI summary
   const handleSummarizeSchool = async () => {
     if (!selectedSchool) return;
 
-    setIsLoadingSummary(true);
-    setSummaryError(null);
-
-    try {
-      const response = await fetch("/api/summarize-school", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          schoolName: selectedSchool.properties.schulname,
-          schoolType: selectedSchool.properties.schultyp,
-          address: `${selectedSchool.properties.strasse} ${selectedSchool.properties.hausnr}, ${selectedSchool.properties.plz} Berlin`,
-          website: selectedSchool.properties.internet,
-          bezirk: selectedSchool.properties.bezirk,
-          stats: selectedSchool.properties.stats,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate summary");
-      }
-
-      // Save to localStorage
-      const storageKey = `ai-summary-${selectedSchool.properties.bsn}`;
-      try {
-        localStorage.setItem(storageKey, data.summary);
-      } catch (error) {
-        console.error("Error saving summary to localStorage:", error);
-      }
-
-      setAiSummary(data.summary);
-    } catch (error: any) {
-      console.error("Error fetching AI summary:", error);
-      setSummaryError(
-        error.message || "Failed to generate summary. Please try again.",
-      );
-    } finally {
-      setIsLoadingSummary(false);
-    }
+    await fetchSummary({
+      bsn: selectedSchool.properties.bsn,
+      schoolName: selectedSchool.properties.schulname,
+      schoolType: selectedSchool.properties.schultyp,
+      address: `${selectedSchool.properties.strasse} ${selectedSchool.properties.hausnr}, ${selectedSchool.properties.plz} Berlin`,
+      website: selectedSchool.properties.internet,
+      bezirk: selectedSchool.properties.bezirk,
+      stats: selectedSchool.properties.stats,
+    });
   };
 
   const handleMapClick = useCallback(
@@ -1348,47 +1297,55 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         </div>
 
                         {/* Summarize Button - Only show if no summary */}
-                        {!aiSummary && !summaryError && (
-                          <Button
-                            size="sm"
-                            variant="solid"
-                            fullWidth
-                            startContent={
-                              isLoadingSummary ? (
-                                <Spinner size="sm" color="white" />
-                              ) : (
-                                <SparklesIcon size={16} />
-                              )
-                            }
-                            onPress={handleSummarizeSchool}
-                            isDisabled={isLoadingSummary}
-                            className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
-                            }}
-                          >
-                            {isLoadingSummary
-                              ? "Summarizing..."
-                              : "Generate AI Summary"}
-                          </Button>
-                        )}
+                        {!getSummary(selectedSchool.properties.bsn) &&
+                          !getSummaryError(selectedSchool.properties.bsn) && (
+                            <Button
+                              size="sm"
+                              variant="solid"
+                              fullWidth
+                              startContent={
+                                isSummaryLoading(
+                                  selectedSchool.properties.bsn,
+                                ) ? (
+                                  <Spinner size="sm" color="white" />
+                                ) : (
+                                  <SparklesIcon size={16} />
+                                )
+                              }
+                              onPress={handleSummarizeSchool}
+                              isDisabled={isSummaryLoading(
+                                selectedSchool.properties.bsn,
+                              )}
+                              className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+                              }}
+                            >
+                              {isSummaryLoading(selectedSchool.properties.bsn)
+                                ? "Summarizing..."
+                                : "Generate AI Summary"}
+                            </Button>
+                          )}
 
                         {/* AI Summary Content */}
-                        {summaryError && (
+                        {getSummaryError(selectedSchool.properties.bsn) && (
                           <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
                             <p className="text-xs text-danger">
-                              ⚠️ {summaryError}
+                              ⚠️{" "}
+                              {getSummaryError(selectedSchool.properties.bsn)}
                             </p>
                           </div>
                         )}
 
-                        {aiSummary && (
+                        {getSummary(selectedSchool.properties.bsn) && (
                           <div className="relative max-h-[200px] overflow-y-auto rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
                             <div className="p-3 text-xs text-default-700 leading-relaxed prose prose-sm max-w-none">
                               <div
                                 dangerouslySetInnerHTML={{
-                                  __html: aiSummary
+                                  __html: getSummary(
+                                    selectedSchool.properties.bsn,
+                                  )!
                                     .replace(
                                       /\*\*(.*?)\*\*/g,
                                       '<strong class="text-foreground font-semibold">$1</strong>',

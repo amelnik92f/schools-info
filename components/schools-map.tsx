@@ -1201,7 +1201,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                             AI-Powered School Summary
                           </span>
                         </div>
-                        
+
                         {/* Summarize Button - Only show if no summary */}
                         {!aiSummary && !summaryError && (
                           <Button
@@ -1237,16 +1237,22 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                             </p>
                           </div>
                         )}
-                        
+
                         {aiSummary && (
                           <div className="relative max-h-[200px] overflow-y-auto rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
                             <div className="p-3 text-xs text-default-700 leading-relaxed prose prose-sm max-w-none">
                               <div
                                 dangerouslySetInnerHTML={{
                                   __html: aiSummary
-                                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
-                                    .replace(/^• /gm, '<span class="text-primary">•</span> ')
-                                    .replace(/\n/g, '<br />')
+                                    .replace(
+                                      /\*\*(.*?)\*\*/g,
+                                      '<strong class="text-foreground font-semibold">$1</strong>',
+                                    )
+                                    .replace(
+                                      /^• /gm,
+                                      '<span class="text-primary">•</span> ',
+                                    )
+                                    .replace(/\n/g, "<br />"),
                                 }}
                               />
                             </div>
@@ -1265,7 +1271,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-sm font-semibold text-foreground">
-                            📊 Statistics ({selectedSchool.properties.stats.schuljahr})
+                            📊 Statistics (
+                            {selectedSchool.properties.stats.schuljahr})
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -1331,7 +1338,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         </div>
 
                         {/* Student-Teacher Ratio */}
-                        {selectedSchool.properties.stats.lehrkraefteGesamt > 0 && (
+                        {selectedSchool.properties.stats.lehrkraefteGesamt >
+                          0 && (
                           <div className="mt-3 p-2 rounded-lg bg-primary/10">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-foreground font-semibold">
@@ -1339,8 +1347,10 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                               </span>
                               <span className="text-foreground font-bold">
                                 {(
-                                  selectedSchool.properties.stats.schuelerGesamt /
-                                  selectedSchool.properties.stats.lehrkraefteGesamt
+                                  selectedSchool.properties.stats
+                                    .schuelerGesamt /
+                                  selectedSchool.properties.stats
+                                    .lehrkraefteGesamt
                                 ).toFixed(1)}
                                 :1
                               </span>

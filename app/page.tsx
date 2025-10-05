@@ -26,8 +26,10 @@ export default async function Home() {
   enrichedSchoolsData = enrichSchoolsWithFifthGrade(enrichedSchoolsData);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <SchoolsMap schoolsData={enrichedSchoolsData} />
-    </div>
+    <main className="flex-grow overflow-hidden">
+      <div className="flex h-full overflow-hidden">
+        <SchoolsMap schoolsData={enrichedSchoolsData} />
+      </div>
+    </main>
   );
 }

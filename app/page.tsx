@@ -3,6 +3,7 @@ import { Chip } from "@heroui/chip";
 import { title, subtitle } from "@/components/primitives";
 import { fetchBerlinSchools } from "@/lib/api/schools";
 import { fetchConstructionProjects } from "@/lib/api/construction-projects";
+import { enrichSchoolsWithConstruction } from "@/lib/utils/enrich-schools";
 import { SchoolsMap } from "@/components/schools-map";
 
 export default async function Home() {
@@ -10,6 +11,12 @@ export default async function Home() {
     fetchBerlinSchools(),
     fetchConstructionProjects(),
   ]);
+
+  // Enrich schools data with construction information
+  const enrichedSchoolsData = enrichSchoolsWithConstruction(
+    schoolsData,
+    constructionData.index,
+  );
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto py-8 px-4">
@@ -87,10 +94,7 @@ export default async function Home() {
       </div>
 
       {/* Map */}
-      <SchoolsMap
-        schoolsData={schoolsData}
-        constructionProjects={constructionData.index}
-      />
+      <SchoolsMap schoolsData={enrichedSchoolsData} />
 
       {/* Info Section */}
       <Card className="bg-content1 shadow-medium">

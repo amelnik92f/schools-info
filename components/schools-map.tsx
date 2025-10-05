@@ -23,6 +23,7 @@ import {
   ConstructionProject,
   ProjectStatusInfo,
 } from "@/types";
+import { getStandaloneProjects } from "@/lib/utils/enrich-schools";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
@@ -96,8 +97,7 @@ const getStatusLabel = (statusInfo: ProjectStatusInfo): string => {
 };
 
 interface SchoolsMapProps {
-  schoolsData: SchoolsGeoJSON;
-  constructionProjects: ConstructionProject[];
+  schoolsData: SchoolsGeoJSON; // Already enriched with construction data
 }
 
 // School type colors for markers
@@ -115,11 +115,14 @@ const SCHOOL_TYPE_COLORS: Record<string, string> = {
 // Construction indicator color (stripes)
 const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibility
 
-export function SchoolsMap({
-  schoolsData,
-  constructionProjects,
-}: SchoolsMapProps) {
+export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
+
+  // Extract standalone construction projects from enriched data
+  const standaloneProjects = useMemo(
+    () => getStandaloneProjects(schoolsData),
+    [schoolsData],
+  );
 
   // Zustand store
   const {
@@ -177,54 +180,6 @@ export function SchoolsMap({
   const [geocodedProjects, setGeocodedProjects] = useState<
     Array<ConstructionProject & { coordinates: [number, number] }>
   >([]);
-
-  // Merge construction history with schools
-  const schoolsWithConstruction = useMemo(() => {
-    // Create a map of construction projects by school number
-    const projectsBySchool = new Map<string, ConstructionProject[]>();
-
-    constructionProjects.forEach((project) => {
-      const schulnummer = project.schulnummer;
-      if (schulnummer) {
-        if (!projectsBySchool.has(schulnummer)) {
-          projectsBySchool.set(schulnummer, []);
-        }
-        projectsBySchool.get(schulnummer)!.push(project);
-      }
-    });
-
-    // Merge with schools
-    return {
-      ...schoolsData,
-      features: schoolsData.features.map((school) => {
-        const bsn = school.properties.bsn;
-        const projects = projectsBySchool.get(bsn) || [];
-
-        return {
-          ...school,
-          properties: {
-            ...school.properties,
-            constructionHistory: projects.length > 0 ? projects : undefined,
-          },
-        };
-      }),
-    };
-  }, [schoolsData, constructionProjects]);
-
-  // Filter out projects that are already merged with schools
-  const standaloneProjects = useMemo(() => {
-    // Get all school numbers that exist in the schools data
-    const existingSchoolNumbers = new Set(
-      schoolsData.features.map((school) => school.properties.bsn),
-    );
-
-    // Filter projects: only keep those without a matching school
-    return constructionProjects.filter((project) => {
-      const schulnummer = project.schulnummer;
-      // Keep project if it has no school number OR if the school doesn't exist yet
-      return !schulnummer || !existingSchoolNumbers.has(schulnummer);
-    });
-  }, [constructionProjects, schoolsData.features]);
 
   // Geocode construction projects using Nominatim (with caching and batching)
   useEffect(() => {
@@ -320,7 +275,7 @@ export function SchoolsMap({
     const carriersSet = new Set<string>();
     const districtsSet = new Set<string>();
 
-    schoolsWithConstruction.features.forEach((school) => {
+    schoolsData.features.forEach((school) => {
       typesSet.add(school.properties.schultyp);
       carriersSet.add(school.properties.traeger);
       districtsSet.add(school.properties.bezirk);
@@ -331,11 +286,11 @@ export function SchoolsMap({
       carriers: Array.from(carriersSet).sort(),
       districts: Array.from(districtsSet).sort(),
     };
-  }, [schoolsWithConstruction]);
+  }, [schoolsData]);
 
   // Filter schools based on all criteria
   const filteredSchools = useMemo(() => {
-    return schoolsWithConstruction.features.filter((school) => {
+    return schoolsData.features.filter((school) => {
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -382,7 +337,7 @@ export function SchoolsMap({
       return true;
     });
   }, [
-    schoolsWithConstruction.features,
+    schoolsData.features,
     searchQuery,
     selectedSchoolTypes,
     selectedCarriers,
@@ -467,12 +422,12 @@ export function SchoolsMap({
                   🔍 Filters
                 </span>
                 <Chip size="sm" variant="flat" color="primary">
-                  {filteredSchools.length} /{" "}
-                  {schoolsWithConstruction.features.length} schools
+                  {filteredSchools.length} / {schoolsData.features.length}{" "}
+                  schools
                 </Chip>
                 {geocodedProjects.length > 0 && (
                   <Chip size="sm" variant="flat" color="warning">
-                    🏗️ {geocodedProjects.length} projects
+                    🏗️ {geocodedProjects.length} Construction projects
                   </Chip>
                 )}
               </div>
@@ -619,7 +574,7 @@ export function SchoolsMap({
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {schoolTypes.map((type) => {
                       // Count based on other active filters (excluding school type)
-                      const count = schoolsWithConstruction.features.filter((s) => {
+                      const count = schoolsData.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -684,7 +639,7 @@ export function SchoolsMap({
                   <div className="flex flex-wrap gap-3">
                     {carriers.map((carrier) => {
                       // Count based on other active filters (excluding carrier)
-                      const count = schoolsWithConstruction.features.filter((s) => {
+                      const count = schoolsData.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -741,7 +696,7 @@ export function SchoolsMap({
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {districts.map((district) => {
                       // Count based on other active filters (excluding district)
-                      const count = schoolsWithConstruction.features.filter((s) => {
+                      const count = schoolsData.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -799,7 +754,7 @@ export function SchoolsMap({
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => {
                           // Count schools with this tag
-                          const count = schoolsWithConstruction.features.filter((s) => {
+                          const count = schoolsData.features.filter((s) => {
                             // Apply search filter
                             if (searchQuery) {
                               const query = searchQuery.toLowerCase();
@@ -982,7 +937,40 @@ export function SchoolsMap({
             })}
 
             {/* Construction Project Markers */}
-            {geocodedProjects.map((project) => {
+            {geocodedProjects
+              .filter((project) => {
+                // Apply search query filter
+                if (searchQuery) {
+                  const query = searchQuery.toLowerCase();
+                  const matchesSearch =
+                    project.schulname.toLowerCase().includes(query) ||
+                    project.strasse.toLowerCase().includes(query) ||
+                    project.bezirk.toLowerCase().includes(query);
+                  if (!matchesSearch) return false;
+                }
+
+                // Apply school type filter
+                if (
+                  selectedSchoolTypes.size > 0 &&
+                  !selectedSchoolTypes.has(project.schulart)
+                ) {
+                  return false;
+                }
+
+                // Apply district filter
+                if (
+                  selectedDistricts.size > 0 &&
+                  !selectedDistricts.has(project.bezirk)
+                ) {
+                  return false;
+                }
+
+                // Note: Construction projects don't have carrier (traeger) info
+                // so we don't filter by carrier
+
+                return true;
+              })
+              .map((project) => {
                 const [lng, lat] = project.coordinates;
                 const isSelected = selectedProject?.id === project.id;
                 // Get color based on school type, default to indigo if not found

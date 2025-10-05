@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
-import Map, {
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import MapGL, {
   Marker,
   Popup,
   NavigationControl,
@@ -16,14 +16,88 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
-import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
+import {
+  SchoolsGeoJSON,
+  SchoolFeature,
+  LocationType,
+  ConstructionProject,
+  ProjectStatusInfo,
+} from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+// Helper function to get project status
+const getProjectStatus = (project: ConstructionProject): ProjectStatusInfo => {
+  const dateStr = project.nutzungsuebergabe;
+  const currentYear = 2025; // October 2025
+
+  if (!dateStr || dateStr === "k.A.") {
+    return { status: "unknown", isCompleted: false };
+  }
+
+  const years = dateStr.match(/\d{4}/g);
+  if (years) {
+    const completionYear = Math.max(...years.map((y) => parseInt(y)));
+
+    if (completionYear < currentYear) {
+      return {
+        status: "completed",
+        completionYear,
+        isCompleted: true,
+      };
+    } else if (completionYear === currentYear) {
+      return {
+        status: "ongoing",
+        completionYear,
+        isCompleted: false,
+      };
+    } else {
+      return {
+        status: "future",
+        completionYear,
+        isCompleted: false,
+      };
+    }
+  }
+
+  return { status: "unknown", isCompleted: false };
+};
+
+// Helper to get status color
+const getStatusColor = (
+  status: ProjectStatusInfo["status"],
+): "success" | "warning" | "primary" | "default" => {
+  switch (status) {
+    case "completed":
+      return "success";
+    case "ongoing":
+      return "warning";
+    case "future":
+      return "primary";
+    default:
+      return "default";
+  }
+};
+
+// Helper to get status label
+const getStatusLabel = (statusInfo: ProjectStatusInfo): string => {
+  switch (statusInfo.status) {
+    case "completed":
+      return `✅ Completed ${statusInfo.completionYear}`;
+    case "ongoing":
+      return `🏗️ In Progress ${statusInfo.completionYear}`;
+    case "future":
+      return `📅 Planned ${statusInfo.completionYear}`;
+    default:
+      return "❓ Status Unknown";
+  }
+};
+
 interface SchoolsMapProps {
   schoolsData: SchoolsGeoJSON;
+  constructionProjects: ConstructionProject[];
 }
 
 // School type colors for markers
@@ -38,7 +112,13 @@ const SCHOOL_TYPE_COLORS: Record<string, string> = {
   default: "#6366f1", // indigo
 };
 
-export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
+// Construction indicator color (stripes)
+const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibility
+
+export function SchoolsMap({
+  schoolsData,
+  constructionProjects,
+}: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
 
   // Zustand store
@@ -88,13 +168,159 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
+  // State for selected construction project
+  const [selectedProject, setSelectedProject] = useState<
+    (ConstructionProject & { coordinates: [number, number] }) | null
+  >(null);
+
+  // State for geocoded construction projects (with coordinates)
+  const [geocodedProjects, setGeocodedProjects] = useState<
+    Array<ConstructionProject & { coordinates: [number, number] }>
+  >([]);
+
+  // Merge construction history with schools
+  const schoolsWithConstruction = useMemo(() => {
+    // Create a map of construction projects by school number
+    const projectsBySchool = new Map<string, ConstructionProject[]>();
+
+    constructionProjects.forEach((project) => {
+      const schulnummer = project.schulnummer;
+      if (schulnummer) {
+        if (!projectsBySchool.has(schulnummer)) {
+          projectsBySchool.set(schulnummer, []);
+        }
+        projectsBySchool.get(schulnummer)!.push(project);
+      }
+    });
+
+    // Merge with schools
+    return {
+      ...schoolsData,
+      features: schoolsData.features.map((school) => {
+        const bsn = school.properties.bsn;
+        const projects = projectsBySchool.get(bsn) || [];
+
+        return {
+          ...school,
+          properties: {
+            ...school.properties,
+            constructionHistory: projects.length > 0 ? projects : undefined,
+          },
+        };
+      }),
+    };
+  }, [schoolsData, constructionProjects]);
+
+  // Filter out projects that are already merged with schools
+  const standaloneProjects = useMemo(() => {
+    // Get all school numbers that exist in the schools data
+    const existingSchoolNumbers = new Set(
+      schoolsData.features.map((school) => school.properties.bsn),
+    );
+
+    // Filter projects: only keep those without a matching school
+    return constructionProjects.filter((project) => {
+      const schulnummer = project.schulnummer;
+      // Keep project if it has no school number OR if the school doesn't exist yet
+      return !schulnummer || !existingSchoolNumbers.has(schulnummer);
+    });
+  }, [constructionProjects, schoolsData.features]);
+
+  // Geocode construction projects using Nominatim (with caching and batching)
+  useEffect(() => {
+    const geocodeProjects = async () => {
+      // Check if we have cached geocoded projects
+      const cacheKey = "construction-projects-geocoded-v2"; // v2 to invalidate old cache
+      const cached = localStorage.getItem(cacheKey);
+
+      if (cached) {
+        try {
+          const cachedData = JSON.parse(cached);
+          // Check if cache is still valid (24 hours) and matches current standalone projects
+          if (
+            cachedData.timestamp &&
+            Date.now() - cachedData.timestamp < 24 * 60 * 60 * 1000 &&
+            cachedData.projectCount === standaloneProjects.length
+          ) {
+            setGeocodedProjects(cachedData.projects);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse cached geocoded projects:", e);
+        }
+      }
+
+      // Geocode in batches with rate limiting
+      const projectsWithCoords: Array<
+        ConstructionProject & { coordinates: [number, number] }
+      > = [];
+
+      // Process only first 100 standalone projects to avoid rate limits
+      const projectsToGeocode = standaloneProjects.slice(0, 100);
+
+      for (let i = 0; i < projectsToGeocode.length; i++) {
+        const project = projectsToGeocode[i];
+        try {
+          // Use Nominatim to geocode the address
+          const address = `${project.strasse}, ${project.plz} ${project.ort}`;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=de`,
+            {
+              headers: {
+                "User-Agent": "Berlin Schools Map App",
+              },
+            },
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.length > 0) {
+              projectsWithCoords.push({
+                ...project,
+                coordinates: [parseFloat(data[0].lon), parseFloat(data[0].lat)],
+              });
+            }
+          }
+
+          // Update progress incrementally
+          if ((i + 1) % 10 === 0 || i === projectsToGeocode.length - 1) {
+            setGeocodedProjects([...projectsWithCoords]);
+          }
+
+          // Add delay to respect Nominatim rate limits (1 request per second)
+          await new Promise((resolve) => setTimeout(resolve, 1100));
+        } catch (error) {
+          console.error(`Failed to geocode project ${project.id}:`, error);
+        }
+      }
+
+      // Cache the results
+      try {
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({
+            timestamp: Date.now(),
+            projectCount: standaloneProjects.length,
+            projects: projectsWithCoords,
+          }),
+        );
+      } catch (e) {
+        console.error("Failed to cache geocoded projects:", e);
+      }
+    };
+
+    if (standaloneProjects.length > 0 && geocodedProjects.length === 0) {
+      geocodeProjects();
+    }
+  }, [standaloneProjects, geocodedProjects.length]);
+
   // Extract unique values for filters
   const { schoolTypes, carriers, districts } = useMemo(() => {
     const typesSet = new Set<string>();
     const carriersSet = new Set<string>();
     const districtsSet = new Set<string>();
 
-    schoolsData.features.forEach((school) => {
+    schoolsWithConstruction.features.forEach((school) => {
       typesSet.add(school.properties.schultyp);
       carriersSet.add(school.properties.traeger);
       districtsSet.add(school.properties.bezirk);
@@ -105,11 +331,11 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
       carriers: Array.from(carriersSet).sort(),
       districts: Array.from(districtsSet).sort(),
     };
-  }, [schoolsData]);
+  }, [schoolsWithConstruction]);
 
   // Filter schools based on all criteria
   const filteredSchools = useMemo(() => {
-    return schoolsData.features.filter((school) => {
+    return schoolsWithConstruction.features.filter((school) => {
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -156,7 +382,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
       return true;
     });
   }, [
-    schoolsData.features,
+    schoolsWithConstruction.features,
     searchQuery,
     selectedSchoolTypes,
     selectedCarriers,
@@ -241,16 +467,21 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   🔍 Filters
                 </span>
                 <Chip size="sm" variant="flat" color="primary">
-                  {filteredSchools.length} / {schoolsData.features.length}{" "}
-                  schools
+                  {filteredSchools.length} /{" "}
+                  {schoolsWithConstruction.features.length} schools
                 </Chip>
+                {geocodedProjects.length > 0 && (
+                  <Chip size="sm" variant="flat" color="warning">
+                    🏗️ {geocodedProjects.length} projects
+                  </Chip>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {hasActiveFilters() && (
                   <Button
                     size="sm"
                     variant="flat"
-                    color="warning"
+                    color="danger"
                     onPress={clearAllFilters}
                   >
                     Clear All
@@ -388,7 +619,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {schoolTypes.map((type) => {
                       // Count based on other active filters (excluding school type)
-                      const count = schoolsData.features.filter((s) => {
+                      const count = schoolsWithConstruction.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -453,7 +684,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   <div className="flex flex-wrap gap-3">
                     {carriers.map((carrier) => {
                       // Count based on other active filters (excluding carrier)
-                      const count = schoolsData.features.filter((s) => {
+                      const count = schoolsWithConstruction.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -510,7 +741,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {districts.map((district) => {
                       // Count based on other active filters (excluding district)
-                      const count = schoolsData.features.filter((s) => {
+                      const count = schoolsWithConstruction.features.filter((s) => {
                         // Apply search filter
                         if (searchQuery) {
                           const query = searchQuery.toLowerCase();
@@ -568,7 +799,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag) => {
                           // Count schools with this tag
-                          const count = schoolsData.features.filter((s) => {
+                          const count = schoolsWithConstruction.features.filter((s) => {
                             // Apply search filter
                             if (searchQuery) {
                               const query = searchQuery.toLowerCase();
@@ -640,7 +871,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
           </div>
         </div>
         <div className="relative w-full h-[600px]">
-          <Map
+          <MapGL
             ref={mapRef}
             {...viewState}
             onMove={(evt) => setViewState(evt.viewState)}
@@ -750,6 +981,88 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
               );
             })}
 
+            {/* Construction Project Markers */}
+            {geocodedProjects.map((project) => {
+                const [lng, lat] = project.coordinates;
+                const isSelected = selectedProject?.id === project.id;
+                // Get color based on school type, default to indigo if not found
+                const color = getMarkerColor(project.schulart);
+
+                return (
+                  <Marker
+                    key={`construction-${project.id}`}
+                    longitude={lng}
+                    latitude={lat}
+                    anchor="bottom"
+                    onClick={(e) => {
+                      e.originalEvent.stopPropagation();
+                      setSelectedProject(project);
+                      setSelectedSchool(null); // Deselect school if any
+
+                      // Fly to the selected project
+                      const latOffset = 0.01;
+                      if (mapRef.current) {
+                        mapRef.current.flyTo({
+                          center: [lng, lat - latOffset],
+                          zoom: Math.max(mapRef.current.getZoom(), 13),
+                          duration: 1000,
+                          essential: true,
+                        });
+                      }
+                    }}
+                  >
+                    <div
+                      className={`cursor-pointer transition-all ${
+                        isSelected ? "scale-125" : "hover:scale-110"
+                      }`}
+                      style={{
+                        position: "relative",
+                        width: "28px",
+                        height: "28px",
+                      }}
+                    >
+                      {/* Main marker (teardrop) with striped overlay */}
+                      <div
+                        style={{
+                          width: "28px",
+                          height: "28px",
+                          borderRadius: "50% 50% 50% 0",
+                          backgroundColor: color,
+                          border: isSelected
+                            ? "3px solid #fff"
+                            : "2px solid white",
+                          transform: "rotate(-45deg)",
+                          boxShadow: isSelected
+                            ? "0 0 0 4px rgba(251, 191, 36, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
+                            : "0 2px 4px rgba(0,0,0,0.3)",
+                          overflow: "hidden",
+                          position: "relative",
+                        }}
+                      >
+                        {/* Diagonal stripes overlay */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundImage: `repeating-linear-gradient(
+                              45deg,
+                              ${CONSTRUCTION_STRIPE_COLOR}66,
+                              ${CONSTRUCTION_STRIPE_COLOR}66 2px,
+                              transparent 2px,
+                              transparent 5px
+                            )`,
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </Marker>
+                );
+              })}
+
             {/* Popup for selected school */}
             {selectedSchool && (
               <Popup
@@ -832,6 +1145,58 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       </div>
                     )}
                   </div>
+
+                  {/* Construction History Section */}
+                  {selectedSchool.properties.constructionHistory &&
+                    selectedSchool.properties.constructionHistory.length > 0 && (
+                      <>
+                        <Divider className="my-3" />
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-semibold text-foreground">
+                              🏗️ Construction History
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {selectedSchool.properties.constructionHistory.map(
+                              (project) => {
+                                const statusInfo = getProjectStatus(project);
+                                return (
+                                  <div
+                                    key={project.id}
+                                    className="p-2 rounded-lg bg-content2"
+                                  >
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                      <span className="text-xs font-semibold text-foreground">
+                                        {project.baumassnahme}
+                                      </span>
+                                      <Chip
+                                        size="sm"
+                                        variant="flat"
+                                        color={getStatusColor(statusInfo.status)}
+                                        className="h-5"
+                                      >
+                                        {getStatusLabel(statusInfo)}
+                                      </Chip>
+                                    </div>
+                                    {project.beschreibung && (
+                                      <p className="text-xs text-default-600 leading-relaxed">
+                                        {project.beschreibung}
+                                      </p>
+                                    )}
+                                    {project.gesamtkosten && (
+                                      <p className="text-xs text-default-500 mt-1">
+                                        💰 {project.gesamtkosten}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                   {/* Tags Section */}
                   {tagsLoaded && (
@@ -920,28 +1285,208 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 </div>
               </Popup>
             )}
-          </Map>
+
+            {/* Popup for selected construction project */}
+            {selectedProject && (
+              <Popup
+                longitude={selectedProject.coordinates[0]}
+                latitude={selectedProject.coordinates[1]}
+                anchor="top"
+                offset={15}
+                onClose={() => setSelectedProject(null)}
+                closeButton={true}
+                closeOnClick={false}
+                className="construction-popup"
+                maxWidth="450px"
+              >
+                <div className="p-4 min-w-[320px]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-3xl">🏗️</span>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-foreground">
+                        {selectedProject.schulname}
+                      </h3>
+                      <div className="flex gap-2 mt-1">
+                        <Chip size="sm" variant="flat" color="warning">
+                          Construction Project
+                        </Chip>
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={getStatusColor(
+                            getProjectStatus(selectedProject).status,
+                          )}
+                        >
+                          {getStatusLabel(getProjectStatus(selectedProject))}
+                        </Chip>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 text-sm text-default-700">
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        📍 Location:
+                      </span>
+                      <p className="mt-1">
+                        {selectedProject.strasse}
+                        <br />
+                        {selectedProject.plz} {selectedProject.ort},{" "}
+                        {selectedProject.bezirk}
+                      </p>
+                    </div>
+
+                    <Divider />
+
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        🏫 School Type:
+                      </span>
+                      <p className="mt-1">{selectedProject.schulart}</p>
+                    </div>
+
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        🔨 Construction Type:
+                      </span>
+                      <p className="mt-1">{selectedProject.baumassnahme}</p>
+                    </div>
+
+                    <div>
+                      <span className="font-semibold text-foreground">
+                        📝 Description:
+                      </span>
+                      <p className="mt-1 leading-relaxed">
+                        {selectedProject.beschreibung}
+                      </p>
+                    </div>
+
+                    {selectedProject.nutzungsuebergabe && (
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          📅 Expected Completion:
+                        </span>
+                        <p className="mt-1">
+                          {selectedProject.nutzungsuebergabe}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedProject.gesamtkosten && (
+                      <div>
+                        <span className="font-semibold text-foreground">
+                          💰 Total Cost:
+                        </span>
+                        <p className="mt-1">{selectedProject.gesamtkosten}</p>
+                      </div>
+                    )}
+
+                    {(selectedProject.schulplaetze_nach_baumassnahme !==
+                      "k.A." ||
+                      selectedProject.zuegigkeit_nach_baumassnahme !==
+                        "k.A.") && (
+                      <>
+                        <Divider />
+                        <div>
+                          <span className="font-semibold text-foreground">
+                            📊 Capacity After Construction:
+                          </span>
+                          {selectedProject.schulplaetze_nach_baumassnahme !==
+                            "k.A." && (
+                            <p className="mt-1">
+                              Places:{" "}
+                              {selectedProject.schulplaetze_nach_baumassnahme}
+                            </p>
+                          )}
+                          {selectedProject.zuegigkeit_nach_baumassnahme !==
+                            "k.A." && (
+                            <p className="mt-1">
+                              Tracks:{" "}
+                              {selectedProject.zuegigkeit_nach_baumassnahme}
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            )}
+          </MapGL>
         </div>
 
         {/* Legend */}
         <div className="p-4 bg-content2 border-t border-divider">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-semibold text-foreground">
-              School Types:
+              Legend:
             </span>
           </div>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries(SCHOOL_TYPE_COLORS)
-              .filter(([type]) => type !== "default")
-              .map(([type, color]) => (
-                <div key={type} className="flex items-center gap-2">
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-default-500 mb-2">School Types:</p>
+              <div className="flex flex-wrap gap-3">
+                {Object.entries(SCHOOL_TYPE_COLORS)
+                  .filter(([type]) => type !== "default")
+                  .map(([type, color]) => (
+                    <div key={type} className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full border border-white"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-xs text-default-600">{type}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <Divider />
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div style={{ position: "relative", width: "16px", height: "16px" }}>
                   <div
-                    className="w-3 h-3 rounded-full border border-white"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-xs text-default-600">{type}</span>
+                    className="border-2 border-white"
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: "#6366f1",
+                      borderRadius: "50% 50% 50% 0",
+                      transform: "rotate(-45deg)",
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
+                  >
+                    {/* Diagonal stripes */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundImage: `repeating-linear-gradient(
+                          45deg,
+                          ${CONSTRUCTION_STRIPE_COLOR}66,
+                          ${CONSTRUCTION_STRIPE_COLOR}66 2px,
+                          transparent 2px,
+                          transparent 5px
+                        )`,
+                      }}
+                    />
+                  </div>
                 </div>
-              ))}
+                <span className="text-xs text-default-600">
+                  Construction Project
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🏠</span>
+                <span className="text-xs text-default-600">Home Location</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">💼</span>
+                <span className="text-xs text-default-600">Work Location</span>
+              </div>
+            </div>
           </div>
         </div>
       </CardBody>

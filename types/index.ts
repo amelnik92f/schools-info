@@ -21,6 +21,7 @@ export interface SchoolProperties {
   email: string; // Email address
   internet: string; // Website URL
   schuljahr: string; // School year (e.g., "2025/26")
+  constructionHistory?: ConstructionProject[]; // Associated construction projects
 }
 
 export interface SchoolFeature {
@@ -77,4 +78,44 @@ export interface CustomLocation {
   type: LocationType;
   coordinates: [number, number]; // [longitude, latitude]
   label?: string; // Optional custom label
+}
+
+// Construction Projects API Types
+export interface ConstructionProject {
+  id: number;
+  schulnummer: string; // School number (BSN)
+  schulname: string; // School name
+  bezirk: string; // District
+  schulart: string; // School type
+  baumassnahme: string; // Construction measure (e.g., "Sanierung; Erweiterung")
+  beschreibung: string; // Description of the construction
+  gebaute_schulplaetze: string; // Built school places
+  schulplaetze_nach_baumassnahme: string; // School places after construction
+  zuegigkeit_nach_baumassnahme: string; // Class tracks after construction
+  nutzungsuebergabe: string; // Handover date (e.g., "2027/2028")
+  gesamtkosten: string; // Total costs
+  strasse: string; // Street
+  plz: string; // Postal code
+  ort: string; // City
+}
+
+export interface ConstructionProjectsResponse {
+  messages: {
+    messages: string[];
+    success: boolean;
+  };
+  results: {
+    count: number;
+    items_per_page: number;
+  };
+  index: ConstructionProject[];
+}
+
+// Helper type for project status
+export type ProjectStatus = "completed" | "ongoing" | "future" | "unknown";
+
+export interface ProjectStatusInfo {
+  status: ProjectStatus;
+  completionYear?: number;
+  isCompleted: boolean;
 }

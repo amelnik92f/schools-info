@@ -618,7 +618,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                 </div>
 
                 {/* Tag Filter */}
-                {tagsLoaded && getUsedTags().length > 0 && (
+                {tagsLoaded && (
                   <>
                     <Divider />
                     <div>
@@ -626,7 +626,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         Tags
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        {getUsedTags().map((tag) => {
+                        {tags.map((tag) => {
                           // Count schools with this tag
                           const count = schoolsData.features.filter((s) => {
                             // Apply search filter
@@ -769,6 +769,9 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
               const [lng, lat] = school.geometry.coordinates;
               const color = getMarkerColor(school.properties.schultyp);
               const isSelected = selectedSchool?.id === school.id;
+              const schoolTags = getSchoolTags(school.id);
+              const hasTag = schoolTags.length > 0;
+              const primaryTag = schoolTags[0]; // Use first tag for color accent
 
               return (
                 <Marker
@@ -790,11 +793,17 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                       height: "24px",
                       borderRadius: "50% 50% 50% 0",
                       backgroundColor: color,
-                      border: isSelected ? "3px solid #fff" : "2px solid white",
+                      border: isSelected
+                        ? "3px solid #fff"
+                        : hasTag
+                          ? `3px solid ${primaryTag.color}`
+                          : "2px solid white",
                       transform: "rotate(-45deg)",
                       boxShadow: isSelected
                         ? "0 0 0 4px rgba(59, 130, 246, 0.5), 0 4px 8px rgba(0,0,0,0.4)"
-                        : "0 2px 4px rgba(0,0,0,0.3)",
+                        : hasTag
+                          ? `0 0 0 2px ${primaryTag.color}, 0 2px 4px rgba(0,0,0,0.3)`
+                          : "0 2px 4px rgba(0,0,0,0.3)",
                     }}
                   />
                 </Marker>

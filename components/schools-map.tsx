@@ -7,17 +7,15 @@ import MapGL, {
   ScaleControl,
   MapRef,
 } from "react-map-gl/maplibre";
-import { Card, CardBody } from "@heroui/card";
 import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import { FilterPanel } from "./schools-map/FilterPanel";
 import { SchoolMarker } from "./schools-map/SchoolMarker";
-import { SchoolPopup } from "./schools-map/SchoolPopup";
+import { SchoolDetailsPanel } from "./schools-map/SchoolDetailsPanel";
 import { CustomLocationMarker } from "./schools-map/CustomLocationMarker";
 import { CustomLocationPopup } from "./schools-map/CustomLocationPopup";
-import { MapLegend } from "./schools-map/MapLegend";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
@@ -125,19 +123,6 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const handleMarkerClick = useCallback(
     (school: SchoolFeature) => {
       setSelectedSchool(school);
-
-      // Smoothly fly to the selected school with animation
-      const [lng, lat] = school.geometry.coordinates;
-      const latOffset = 0.01; // Offset to position popup nicely
-
-      if (mapRef.current) {
-        mapRef.current.flyTo({
-          center: [lng, lat - latOffset],
-          zoom: Math.max(mapRef.current.getZoom(), 13),
-          duration: 1000, // 1 second animation
-          essential: true,
-        });
-      }
     },
     [setSelectedSchool],
   );
@@ -170,8 +155,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   return (
     <>
-      {/* Left Sidebar */}
-      <div className="w-96 flex flex-col bg-content1 border-r border-divider overflow-y-auto">
+      {/* Left Sidebar with Filters */}
+      <div className="w-96 flex flex-col bg-content1 border-r border-divider">
         {/* Header */}
         <div className="p-6 border-b border-divider">
           <div className="flex items-center gap-3">
@@ -187,14 +172,25 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
           </div>
         </div>
 
-        {/* Filter Panel and Legend */}
-        <FilterPanel
-          schoolsData={schoolsData}
-          filteredSchoolsCount={filteredSchools.length}
-          mapRef={mapRef}
-        />
-        {/*<MapLegend />*/}
+        {/* Filter Panel - scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <FilterPanel
+            schoolsData={schoolsData}
+            filteredSchoolsCount={filteredSchools.length}
+            mapRef={mapRef}
+          />
+        </div>
       </div>
+
+      {/* School Details Panel (if school selected) */}
+      {selectedSchool && (
+        <div className="w-96 flex flex-col">
+          <SchoolDetailsPanel
+            school={selectedSchool}
+            onClose={handleClosePopup}
+          />
+        </div>
+      )}
 
       {/* Map on Right Side */}
       <div className="flex-1 relative">
@@ -239,11 +235,6 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
               onClick={handleMarkerClick}
             />
           ))}
-
-          {/* Popup for selected school */}
-          {selectedSchool && (
-            <SchoolPopup school={selectedSchool} onClose={handleClosePopup} />
-          )}
 
           {/* Custom Location Popups */}
           {selectedCustomLocation && locations[selectedCustomLocation] && (

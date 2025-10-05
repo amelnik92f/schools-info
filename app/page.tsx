@@ -6,6 +6,7 @@ import { fetchConstructionProjects } from "@/lib/api/construction-projects";
 import { fetchSchoolStats } from "@/lib/api/school-stats";
 import { enrichSchoolsWithConstruction } from "@/lib/utils/enrich-schools";
 import { enrichSchoolsWithStats } from "@/lib/utils/enrich-schools-with-stats";
+import { enrichSchoolsWithFifthGrade } from "@/lib/utils/enrich-schools-with-fifth-grade";
 import { SchoolsMap } from "@/components/schools-map";
 
 export default async function Home() {
@@ -23,6 +24,9 @@ export default async function Home() {
 
   // Enrich schools data with statistics
   enrichedSchoolsData = enrichSchoolsWithStats(enrichedSchoolsData, statsMap);
+
+  // Enrich schools data with 5th grade acceptance information
+  enrichedSchoolsData = enrichSchoolsWithFifthGrade(enrichedSchoolsData);
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto py-8 px-4">

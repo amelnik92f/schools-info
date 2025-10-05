@@ -137,6 +137,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     selectedCarriers,
     selectedDistricts,
     selectedTags,
+    showAfter4thGradeOnly,
+    setShowAfter4thGradeOnly,
     showFilters,
     setShowFilters,
     isSettingLocation,
@@ -237,6 +239,11 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
         if (!hasAnySelectedTag) return false;
       }
 
+      // After 4th grade filter
+      if (showAfter4thGradeOnly && !school.properties.acceptsAfter4thGrade) {
+        return false;
+      }
+
       return true;
     });
   }, [
@@ -246,6 +253,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     selectedCarriers,
     selectedDistricts,
     selectedTags,
+    showAfter4thGradeOnly,
     getSchoolTags,
   ]);
 
@@ -583,6 +591,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         ) {
                           return false;
                         }
+                        // Apply after 4th grade filter
+                        if (
+                          showAfter4thGradeOnly &&
+                          !s.properties.acceptsAfter4thGrade
+                        ) {
+                          return false;
+                        }
                         // Check if this is the current type
                         return s.properties.schultyp === type;
                       }).length;
@@ -648,6 +663,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         ) {
                           return false;
                         }
+                        // Apply after 4th grade filter
+                        if (
+                          showAfter4thGradeOnly &&
+                          !s.properties.acceptsAfter4thGrade
+                        ) {
+                          return false;
+                        }
                         // Check if this is the current carrier
                         return s.properties.traeger === carrier;
                       }).length;
@@ -702,6 +724,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         if (
                           selectedCarriers.size > 0 &&
                           !selectedCarriers.has(s.properties.traeger)
+                        ) {
+                          return false;
+                        }
+                        // Apply after 4th grade filter
+                        if (
+                          showAfter4thGradeOnly &&
+                          !s.properties.acceptsAfter4thGrade
                         ) {
                           return false;
                         }
@@ -772,6 +801,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                             ) {
                               return false;
                             }
+                            // Apply after 4th grade filter
+                            if (
+                              showAfter4thGradeOnly &&
+                              !s.properties.acceptsAfter4thGrade
+                            ) {
+                              return false;
+                            }
                             // Check if this school has the current tag
                             return schoolHasTag(s.id, tag.id);
                           }).length;
@@ -802,6 +838,79 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                     </div>
                   </>
                 )}
+
+                {/* After 4th Grade Filter */}
+                <Divider />
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Special Programs
+                  </h3>
+                  <Checkbox
+                    size="sm"
+                    isSelected={showAfter4thGradeOnly}
+                    onValueChange={setShowAfter4thGradeOnly}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">⚡</span>
+                      <span className="text-xs text-default-700">
+                        Entry After 4th Grade Available (
+                        {
+                          schoolsData.features.filter((s) => {
+                            // Apply search filter
+                            if (searchQuery) {
+                              const query = searchQuery.toLowerCase();
+                              const matchesSearch =
+                                s.properties.schulname
+                                  .toLowerCase()
+                                  .includes(query) ||
+                                s.properties.strasse
+                                  .toLowerCase()
+                                  .includes(query) ||
+                                s.properties.bezirk
+                                  .toLowerCase()
+                                  .includes(query);
+                              if (!matchesSearch) return false;
+                            }
+                            // Apply school type filter
+                            if (
+                              selectedSchoolTypes.size > 0 &&
+                              !selectedSchoolTypes.has(s.properties.schultyp)
+                            ) {
+                              return false;
+                            }
+                            // Apply carrier filter
+                            if (
+                              selectedCarriers.size > 0 &&
+                              !selectedCarriers.has(s.properties.traeger)
+                            ) {
+                              return false;
+                            }
+                            // Apply district filter
+                            if (
+                              selectedDistricts.size > 0 &&
+                              !selectedDistricts.has(s.properties.bezirk)
+                            ) {
+                              return false;
+                            }
+                            // Apply tag filter
+                            if (selectedTags.size > 0) {
+                              const schoolTagIds = getSchoolTags(s.id).map(
+                                (t) => t.id,
+                              );
+                              const hasAnySelectedTag = Array.from(
+                                selectedTags,
+                              ).some((tagId) => schoolTagIds.includes(tagId));
+                              if (!hasAnySelectedTag) return false;
+                            }
+                            // Check if this school accepts after 4th grade
+                            return s.properties.acceptsAfter4thGrade;
+                          }).length
+                        }
+                        )
+                      </span>
+                    </div>
+                  </Checkbox>
+                </div>
               </div>
             )}
           </div>
@@ -1022,6 +1131,16 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         <Chip size="sm" variant="flat" color="default">
                           {selectedSchool.properties.traeger}
                         </Chip>
+                        {selectedSchool.properties.acceptsAfter4thGrade && (
+                          <Chip
+                            size="sm"
+                            variant="solid"
+                            className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold"
+                            startContent={<span className="text-base">⚡</span>}
+                          >
+                            Entry After 4th Grade
+                          </Chip>
+                        )}
                       </div>
                     </>
                   )}
@@ -1218,10 +1337,10 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                                   ⚠️ AI-Generated Content
                                 </div>
                                 <p className="text-xs text-default-600 leading-relaxed">
-                                  This summary is generated by AI and may contain
-                                  inaccuracies. Please verify important information
-                                  directly with the school or visit their official
-                                  website.
+                                  This summary is generated by AI and may
+                                  contain inaccuracies. Please verify important
+                                  information directly with the school or visit
+                                  their official website.
                                 </p>
                               </div>
                             </PopoverContent>

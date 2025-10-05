@@ -38,6 +38,7 @@ export interface SchoolProperties {
   isConstructionProject?: boolean; // Flag indicating this is a standalone construction project
   constructionData?: ConstructionProject; // Original construction project data for standalone projects
   stats?: SchoolStats; // School statistics (students, teachers)
+  acceptsAfter4thGrade?: boolean; // Whether the school accepts students after 4th grade
 }
 
 export interface SchoolFeature {

@@ -39,6 +39,9 @@ interface SchoolsMapState {
   setSelectedTags: (tags: Set<string>) => void;
   toggleTag: (tagId: string) => void;
 
+  showAfter4thGradeOnly: boolean;
+  setShowAfter4thGradeOnly: (show: boolean) => void;
+
   // UI states
   showFilters: boolean;
   setShowFilters: (show: boolean) => void;
@@ -125,6 +128,9 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
           return { selectedTags: newSet };
         }),
 
+      showAfter4thGradeOnly: false,
+      setShowAfter4thGradeOnly: (show) => set({ showAfter4thGradeOnly: show }),
+
       showFilters: false,
       setShowFilters: (show) => set({ showFilters: show }),
 
@@ -142,6 +148,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
           selectedCarriers: new Set(),
           selectedDistricts: new Set(),
           selectedTags: new Set(),
+          showAfter4thGradeOnly: false,
         }),
 
       hasActiveFilters: () => {
@@ -151,7 +158,8 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
           state.selectedSchoolTypes.size > 0 ||
           state.selectedCarriers.size > 0 ||
           state.selectedDistricts.size > 0 ||
-          state.selectedTags.size > 0
+          state.selectedTags.size > 0 ||
+          state.showAfter4thGradeOnly
         );
       },
     }),
@@ -197,6 +205,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
         selectedCarriers: state.selectedCarriers,
         selectedDistricts: state.selectedDistricts,
         selectedTags: state.selectedTags,
+        showAfter4thGradeOnly: state.showAfter4thGradeOnly,
         showFilters: state.showFilters,
         viewState: state.viewState,
       }),

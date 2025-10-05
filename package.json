@@ -11,6 +11,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@heroui/accordion": "2.2.24",
     "@heroui/alert": "2.2.27",
     "@heroui/autocomplete": "2.3.29",

@@ -16,6 +16,7 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
+import { Spinner } from "@heroui/spinner";
 import {
   SchoolsGeoJSON,
   SchoolFeature,
@@ -26,6 +27,7 @@ import {
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
+import { SparklesIcon } from "@/components/icons";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 // Helper function to get project status
@@ -116,6 +118,11 @@ const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better visibil
 
 export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
+
+  // AI Summary state
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   // Zustand store
   const {
@@ -276,7 +283,77 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   const handleClosePopup = useCallback(() => {
     setSelectedSchool(null);
+    setAiSummary(null);
+    setSummaryError(null);
   }, []);
+
+  // Load AI summary from localStorage when school is selected
+  useEffect(() => {
+    if (selectedSchool && !selectedSchool.properties.isConstructionProject) {
+      const storageKey = `ai-summary-${selectedSchool.properties.bsn}`;
+      try {
+        const cachedSummary = localStorage.getItem(storageKey);
+        if (cachedSummary) {
+          setAiSummary(cachedSummary);
+        } else {
+          setAiSummary(null);
+        }
+      } catch (error) {
+        console.error("Error loading cached summary:", error);
+      }
+    } else {
+      setAiSummary(null);
+    }
+    setSummaryError(null);
+  }, [selectedSchool]);
+
+  // Function to fetch AI summary
+  const handleSummarizeSchool = async () => {
+    if (!selectedSchool) return;
+
+    setIsLoadingSummary(true);
+    setSummaryError(null);
+
+    try {
+      const response = await fetch("/api/summarize-school", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          schoolName: selectedSchool.properties.schulname,
+          schoolType: selectedSchool.properties.schultyp,
+          address: `${selectedSchool.properties.strasse} ${selectedSchool.properties.hausnr}, ${selectedSchool.properties.plz} Berlin`,
+          website: selectedSchool.properties.internet,
+          bezirk: selectedSchool.properties.bezirk,
+          stats: selectedSchool.properties.stats,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate summary");
+      }
+
+      // Save to localStorage
+      const storageKey = `ai-summary-${selectedSchool.properties.bsn}`;
+      try {
+        localStorage.setItem(storageKey, data.summary);
+      } catch (error) {
+        console.error("Error saving summary to localStorage:", error);
+      }
+
+      setAiSummary(data.summary);
+    } catch (error: any) {
+      console.error("Error fetching AI summary:", error);
+      setSummaryError(
+        error.message || "Failed to generate summary. Please try again.",
+      );
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
 
   const handleMapClick = useCallback(
     (event: any) => {
@@ -1111,6 +1188,74 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
                         </div>
                       )}
                     </div>
+                  )}
+
+                  {/* AI Summary Button & Content Section */}
+                  {!selectedSchool.properties.isConstructionProject && (
+                    <>
+                      <Divider className="my-3" />
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <SparklesIcon size={16} className="text-primary" />
+                          <span className="text-xs font-semibold text-foreground">
+                            AI-Powered School Summary
+                          </span>
+                        </div>
+                        
+                        {/* Summarize Button - Only show if no summary */}
+                        {!aiSummary && !summaryError && (
+                          <Button
+                            size="sm"
+                            variant="solid"
+                            fullWidth
+                            startContent={
+                              isLoadingSummary ? (
+                                <Spinner size="sm" color="white" />
+                              ) : (
+                                <SparklesIcon size={16} />
+                              )
+                            }
+                            onPress={handleSummarizeSchool}
+                            isDisabled={isLoadingSummary}
+                            className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+                            }}
+                          >
+                            {isLoadingSummary
+                              ? "Summarizing..."
+                              : "Generate AI Summary"}
+                          </Button>
+                        )}
+
+                        {/* AI Summary Content */}
+                        {summaryError && (
+                          <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
+                            <p className="text-xs text-danger">
+                              ⚠️ {summaryError}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {aiSummary && (
+                          <div className="relative max-h-[200px] overflow-y-auto rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
+                            <div className="p-3 text-xs text-default-700 leading-relaxed prose prose-sm max-w-none">
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html: aiSummary
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground font-semibold">$1</strong>')
+                                    .replace(/^• /gm, '<span class="text-primary">•</span> ')
+                                    .replace(/\n/g, '<br />')
+                                }}
+                              />
+                            </div>
+                            {/* Fade effect at bottom */}
+                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
 
                   {/* Statistics Section */}

@@ -58,3 +58,21 @@
   border-top-color: #18181b !important;
   border-bottom-color: #18181b !important;
 }
+
+/* Custom scrollbar styles for AI summary */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--heroui-primary) / 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--heroui-primary) / 0.5);
+}

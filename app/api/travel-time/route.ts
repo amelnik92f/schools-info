@@ -8,7 +8,6 @@ const PROFILE_MAP: Record<string, string> = {
   walking: "foot-walking",
   bicycle: "cycling-regular",
   car: "driving-car",
-  publicTransport: "foot-walking", // ORS doesn't have public transport, fallback to walking
 };
 
 export interface TravelTimeRequest {

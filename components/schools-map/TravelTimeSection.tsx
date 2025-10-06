@@ -79,7 +79,7 @@ export function TravelTimeSection({
           {isLoadingTravelTimes && <Spinner size="sm" color="primary" />}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {isLoadingTravelTimes || !travelTimesFromHome
             ? // Show skeleton loading state
               TRAVEL_MODES.map((mode) => (

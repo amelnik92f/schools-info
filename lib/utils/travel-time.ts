@@ -3,7 +3,7 @@
  */
 
 export interface TravelTime {
-  mode: "walking" | "bicycle" | "car" | "publicTransport";
+  mode: "walking" | "bicycle" | "car";
   durationMinutes: number;
   distanceKm: number;
   icon: string;
@@ -19,7 +19,6 @@ export const TRAVEL_MODES: Array<{
   { mode: "walking", icon: "🚶", label: "Walking" },
   { mode: "bicycle", icon: "🚴", label: "Bicycle" },
   { mode: "car", icon: "🚗", label: "Car" },
-  { mode: "publicTransport", icon: "🚇", label: "Public Transport" },
 ];
 
 export async function fetchTravelTimes(

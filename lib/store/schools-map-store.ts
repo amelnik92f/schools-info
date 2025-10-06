@@ -131,7 +131,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       showAfter4thGradeOnly: false,
       setShowAfter4thGradeOnly: (show) => set({ showAfter4thGradeOnly: show }),
 
-      showFilters: true,
+      showFilters: typeof window !== 'undefined' && window.innerWidth >= 768, // Hidden on mobile by default
       setShowFilters: (show) => set({ showFilters: show }),
 
       isSettingLocation: null,

@@ -7,6 +7,7 @@ import MapGL, {
   ScaleControl,
   MapRef,
 } from "react-map-gl/maplibre";
+import clsx from "clsx";
 import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
@@ -41,6 +42,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     setIsSettingLocation,
     selectedCustomLocation,
     setSelectedCustomLocation,
+    showFilters,
+    setShowFilters,
   } = useSchoolsMapStore();
 
   // Tags store
@@ -123,8 +126,12 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   const handleMarkerClick = useCallback(
     (school: SchoolFeature) => {
       setSelectedSchool(school);
+      // Close filter panel on mobile when selecting a school
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setShowFilters(false);
+      }
     },
-    [setSelectedSchool],
+    [setSelectedSchool, setShowFilters],
   );
 
   const handleClosePopup = useCallback(() => {
@@ -156,19 +163,36 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   return (
     <>
       {/* Left Sidebar with Filters */}
-      <div className="w-96 flex flex-col bg-content1 border-r border-divider">
+      <div
+        className={clsx(
+          "w-full md:w-96 flex flex-col bg-content1 border-r border-divider",
+          "md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 transition-transform duration-300",
+          showFilters ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
         {/* Header */}
         <div className="p-6 border-b border-divider">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">🏫</span>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
-                Berlin Schools
-              </h1>
-              <p className="text-sm text-default-500">
-                Find a school in your district
-              </p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🏫</span>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">
+                  Berlin Schools
+                </h1>
+                <p className="text-sm text-default-500">
+                  Find a school in your district
+                </p>
+              </div>
             </div>
+            {/* Close button - only on mobile */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-default-100 transition-colors"
+              onClick={() => setShowFilters(false)}
+              aria-label="Close filters"
+            >
+              <span className="text-xl">✕</span>
+            </button>
           </div>
         </div>
 
@@ -184,7 +208,13 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
       {/* School Details Panel (if school selected) */}
       {selectedSchool && (
-        <div className="w-96 flex flex-col">
+        <div
+          className={clsx(
+            "w-full md:w-96 flex flex-col",
+            "md:relative md:translate-x-0",
+            "fixed inset-y-0 right-0 z-40 transition-transform duration-300",
+          )}
+        >
           <SchoolDetailsPanel
             school={selectedSchool}
             onClose={handleClosePopup}
@@ -194,6 +224,14 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
       {/* Map on Right Side */}
       <div className="flex-1 relative">
+        {/* Mobile Filter Toggle Button */}
+        <button
+          className="md:hidden absolute top-4 left-4 z-20 p-3 rounded-lg bg-content1 shadow-lg border border-divider hover:bg-content2 transition-colors"
+          onClick={() => setShowFilters(true)}
+          aria-label="Open filters"
+        >
+          <span className="text-xl">☰</span>
+        </button>
         <MapGL
           ref={mapRef}
           {...viewState}

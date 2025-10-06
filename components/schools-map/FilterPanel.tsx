@@ -39,6 +39,8 @@ export function FilterPanel({
     toggleCarrier,
     toggleDistrict,
     toggleTag,
+    clearAllFilters,
+    hasActiveFilters,
   } = useSchoolsMapStore();
 
   const {
@@ -202,6 +204,16 @@ export function FilterPanel({
               </Chip>
             )}
           </div>
+          {hasActiveFilters() && (
+            <Button
+              size="sm"
+              variant="flat"
+              color="danger"
+              onPress={clearAllFilters}
+            >
+              Clear All
+            </Button>
+          )}
         </div>
 
         {/* Search Input */}

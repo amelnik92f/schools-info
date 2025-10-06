@@ -127,7 +127,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
     (school: SchoolFeature) => {
       setSelectedSchool(school);
       // Close filter panel on mobile when selecting a school
-      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
         setShowFilters(false);
       }
     },

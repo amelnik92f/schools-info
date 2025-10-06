@@ -19,6 +19,18 @@ import {
   getStatusLabel,
 } from "./utils";
 
+function createGoogleEarthLink(latitude: number, longitude: number): string {
+  // The part of the URL containing the fixed camera and data parameters.
+  const fixedUrlEnd =
+    ",65.01509008a,464.25589089d,35y,264.46221151h,60t,0r/data=CgRCAggBKAJCAggASg0I____________ARAA";
+
+  // Combine the base URL, the dynamic coordinates, and the fixed parameters
+  // using a template literal for clarity.
+  const fullUrl = `https://earth.google.com/web/@${latitude},${longitude}${fixedUrlEnd}`;
+
+  return fullUrl;
+}
+
 interface SchoolDetailsPanelProps {
   school: SchoolFeature;
   onClose: () => void;
@@ -219,6 +231,27 @@ export function SchoolDetailsPanel({
                 </div>
               )}
 
+              <Divider />
+
+              <div>
+                <span className="font-semibold text-foreground">
+                  🌍 Location:
+                </span>
+                <div className="mt-1">
+                  <Link
+                    href={createGoogleEarthLink(
+                      school.geometry.coordinates[1],
+                      school.geometry.coordinates[0],
+                    )}
+                    isExternal
+                    size="sm"
+                    className="text-primary"
+                  >
+                    View on Google Earth
+                  </Link>
+                </div>
+              </div>
+
               {(school.properties.constructionData
                 .schulplaetze_nach_baumassnahme !== "k.A." ||
                 school.properties.constructionData
@@ -297,6 +330,21 @@ export function SchoolDetailsPanel({
                   </Link>
                 </div>
               )}
+
+              <div className="flex items-center gap-2">
+                <span className="text-base">🌍</span>
+                <Link
+                  href={createGoogleEarthLink(
+                    school.geometry.coordinates[1],
+                    school.geometry.coordinates[0],
+                  )}
+                  isExternal
+                  size="sm"
+                  className="text-primary"
+                >
+                  View on Google Earth
+                </Link>
+              </div>
             </div>
           )}
 

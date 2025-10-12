@@ -1,25 +1,32 @@
 import { Marker } from "react-map-gl/maplibre";
-import { SchoolFeature } from "@/types";
+import { EnrichedSchool, ConstructionProject } from "@/types";
 import { getMarkerColor, CONSTRUCTION_STRIPE_COLOR } from "./utils";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 
 interface SchoolMarkerProps {
-  school: SchoolFeature;
+  item: EnrichedSchool | ConstructionProject;
   isSelected: boolean;
-  onClick: (school: SchoolFeature) => void;
+  onClick: (item: EnrichedSchool | ConstructionProject) => void;
 }
 
-export function SchoolMarker({
-  school,
-  isSelected,
-  onClick,
-}: SchoolMarkerProps) {
+export function SchoolMarker({ item, isSelected, onClick }: SchoolMarkerProps) {
   const { getSchoolTags } = useSchoolTagsStore();
 
-  const isConstruction = school.properties.isConstructionProject === true;
-  const [lng, lat] = school.geometry.coordinates;
-  const color = getMarkerColor(school.properties.schultyp);
-  const schoolTags = getSchoolTags(school.id);
+  const isSchool = "school" in item;
+  const isConstruction = !isSchool;
+
+  const school = isSchool ? (item as EnrichedSchool).school : null;
+  const project = !isSchool ? (item as ConstructionProject) : null;
+
+  const lng = school?.longitude || project?.longitude || 0;
+  const lat = school?.latitude || project?.latitude || 0;
+  const schoolType = school?.school_category || project?.school_type || "";
+  const schoolId = school
+    ? `schulen.${school.school_number}`
+    : `construction.${project?.id}`;
+
+  const color = getMarkerColor(schoolType);
+  const schoolTags = isSchool ? getSchoolTags(schoolId) : [];
   const hasTag = schoolTags.length > 0;
   const primaryTag = schoolTags[0]; // Use first tag for color accent
 
@@ -30,7 +37,7 @@ export function SchoolMarker({
       anchor="bottom"
       onClick={(e) => {
         e.originalEvent.stopPropagation();
-        onClick(school);
+        onClick(item);
       }}
     >
       <div

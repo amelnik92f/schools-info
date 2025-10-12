@@ -1,11 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { SchoolFeature, LocationType } from "@/types";
+import {
+  EnrichedSchool,
+  ConstructionProject,
+  LocationType,
+} from "@/types";
 
 interface SchoolsMapState {
-  // Selected school state
-  selectedSchool: SchoolFeature | null;
-  setSelectedSchool: (school: SchoolFeature | null) => void;
+  // Selected school or construction project state
+  selectedSchool: EnrichedSchool | ConstructionProject | null;
+  setSelectedSchool: (
+    item: EnrichedSchool | ConstructionProject | null,
+  ) => void;
 
   // Map view state
   viewState: {

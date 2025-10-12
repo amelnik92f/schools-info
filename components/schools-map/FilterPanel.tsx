@@ -7,21 +7,23 @@ import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
 import { MapRef } from "react-map-gl/maplibre";
-import { SchoolsGeoJSON } from "@/types";
+import { EnrichedSchool, ConstructionProject } from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import { getMarkerColor } from "./utils";
 
 interface FilterPanelProps {
-  schoolsData: SchoolsGeoJSON;
-  filteredSchoolsCount: number;
+  schools: EnrichedSchool[];
+  standaloneProjects: ConstructionProject[];
+  filteredItemsCount: number;
   mapRef: React.RefObject<MapRef>;
 }
 
 export function FilterPanel({
-  schoolsData,
-  filteredSchoolsCount,
+  schools,
+  standaloneProjects,
+  filteredItemsCount,
   mapRef,
 }: FilterPanelProps) {
   const {
@@ -57,16 +59,29 @@ export function FilterPanel({
     hasLocation,
   } = useCustomLocationsStore();
 
+  // Combine all items
+  const allItems = useMemo(() => {
+    return [...schools, ...standaloneProjects];
+  }, [schools, standaloneProjects]);
+
   // Extract unique values for filters
   const { schoolTypes, carriers, districts } = useMemo(() => {
     const typesSet = new Set<string>();
     const carriersSet = new Set<string>();
     const districtsSet = new Set<string>();
 
-    schoolsData.features.forEach((school) => {
-      typesSet.add(school.properties.schultyp);
-      carriersSet.add(school.properties.traeger);
-      districtsSet.add(school.properties.bezirk);
+    allItems.forEach((item) => {
+      const isSchool = "school" in item;
+      const school = isSchool ? (item as EnrichedSchool).school : null;
+      const project = !isSchool ? (item as ConstructionProject) : null;
+
+      const schoolType = school?.school_category || project?.school_type || "";
+      const operator = school?.operator || "öffentlich";
+      const district = school?.district || project?.district || "";
+
+      if (schoolType) typesSet.add(schoolType);
+      if (operator) carriersSet.add(operator);
+      if (district) districtsSet.add(district);
     });
 
     return {
@@ -74,21 +89,29 @@ export function FilterPanel({
       carriers: Array.from(carriersSet).sort(),
       districts: Array.from(districtsSet).sort(),
     };
-  }, [schoolsData]);
+  }, [allItems]);
 
-  // Helper to count schools with specific filter applied
-  const countSchoolsWithFilter = (filterFn: (school: any) => boolean) => {
-    return schoolsData.features.filter((s) => {
+  // Helper to count items with specific filter applied
+  const countItemsWithFilter = (filterFn: (item: any) => boolean) => {
+    return allItems.filter((item) => {
       // Apply search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
+        const isSchool = "school" in item;
+        const school = isSchool ? (item as EnrichedSchool).school : null;
+        const project = !isSchool ? (item as ConstructionProject) : null;
+
+        const name = school?.name || project?.school_name || "";
+        const street = school?.street || project?.street || "";
+        const district = school?.district || project?.district || "";
+
         const matchesSearch =
-          s.properties.schulname.toLowerCase().includes(query) ||
-          s.properties.strasse.toLowerCase().includes(query) ||
-          s.properties.bezirk.toLowerCase().includes(query);
+          name.toLowerCase().includes(query) ||
+          street.toLowerCase().includes(query) ||
+          district.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
-      return filterFn(s);
+      return filterFn(item);
     }).length;
   };
 
@@ -188,19 +211,11 @@ export function FilterPanel({
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
             <Chip size="sm" variant="flat" color="primary">
-              {filteredSchoolsCount} / {schoolsData.features.length} schools
+              {filteredItemsCount} / {allItems.length} schools
             </Chip>
-            {schoolsData.features.some(
-              (f) => f.properties.isConstructionProject,
-            ) && (
+            {standaloneProjects.length > 0 && (
               <Chip size="sm" variant="flat" color="warning">
-                🏗️{" "}
-                {
-                  schoolsData.features.filter(
-                    (f) => f.properties.isConstructionProject,
-                  ).length
-                }{" "}
-                projects
+                🏗️ {standaloneProjects.length} projects
               </Chip>
             )}
           </div>
@@ -238,23 +253,36 @@ export function FilterPanel({
             </h3>
             <div className="flex flex-col gap-2">
               {schoolTypes.map((type) => {
-                const count = countSchoolsWithFilter((s) => {
+                const count = countItemsWithFilter((item) => {
+                  const isSchool = "school" in item;
+                  const school = isSchool
+                    ? (item as EnrichedSchool).school
+                    : null;
+                  const project = !isSchool
+                    ? (item as ConstructionProject)
+                    : null;
+
+                  const operator = school?.operator || "öffentlich";
+                  const district = school?.district || project?.district || "";
+                  const schoolType =
+                    school?.school_category || project?.school_type || "";
+                  const acceptsAfter4th = isSchool
+                    ? (item as EnrichedSchool).details
+                        ?.available_after_4th_grade || false
+                    : false;
+
                   if (
                     selectedCarriers.size > 0 &&
-                    !selectedCarriers.has(s.properties.traeger)
+                    !selectedCarriers.has(operator)
                   )
                     return false;
                   if (
                     selectedDistricts.size > 0 &&
-                    !selectedDistricts.has(s.properties.bezirk)
+                    !selectedDistricts.has(district)
                   )
                     return false;
-                  if (
-                    showAfter4thGradeOnly &&
-                    !s.properties.acceptsAfter4thGrade
-                  )
-                    return false;
-                  return s.properties.schultyp === type;
+                  if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+                  return schoolType === type;
                 });
                 return (
                   <Checkbox
@@ -291,23 +319,36 @@ export function FilterPanel({
             </h3>
             <div className="flex flex-wrap gap-3">
               {carriers.map((carrier) => {
-                const count = countSchoolsWithFilter((s) => {
+                const count = countItemsWithFilter((item) => {
+                  const isSchool = "school" in item;
+                  const school = isSchool
+                    ? (item as EnrichedSchool).school
+                    : null;
+                  const project = !isSchool
+                    ? (item as ConstructionProject)
+                    : null;
+
+                  const operator = school?.operator || "öffentlich";
+                  const district = school?.district || project?.district || "";
+                  const schoolType =
+                    school?.school_category || project?.school_type || "";
+                  const acceptsAfter4th = isSchool
+                    ? (item as EnrichedSchool).details
+                        ?.available_after_4th_grade || false
+                    : false;
+
                   if (
                     selectedSchoolTypes.size > 0 &&
-                    !selectedSchoolTypes.has(s.properties.schultyp)
+                    !selectedSchoolTypes.has(schoolType)
                   )
                     return false;
                   if (
                     selectedDistricts.size > 0 &&
-                    !selectedDistricts.has(s.properties.bezirk)
+                    !selectedDistricts.has(district)
                   )
                     return false;
-                  if (
-                    showAfter4thGradeOnly &&
-                    !s.properties.acceptsAfter4thGrade
-                  )
-                    return false;
-                  return s.properties.traeger === carrier;
+                  if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+                  return operator === carrier;
                 });
                 return (
                   <Checkbox
@@ -334,23 +375,37 @@ export function FilterPanel({
             </h3>
             <div className="flex flex-col gap-2">
               {districts.map((district) => {
-                const count = countSchoolsWithFilter((s) => {
+                const count = countItemsWithFilter((item) => {
+                  const isSchool = "school" in item;
+                  const school = isSchool
+                    ? (item as EnrichedSchool).school
+                    : null;
+                  const project = !isSchool
+                    ? (item as ConstructionProject)
+                    : null;
+
+                  const operator = school?.operator || "öffentlich";
+                  const itemDistrict =
+                    school?.district || project?.district || "";
+                  const schoolType =
+                    school?.school_category || project?.school_type || "";
+                  const acceptsAfter4th = isSchool
+                    ? (item as EnrichedSchool).details
+                        ?.available_after_4th_grade || false
+                    : false;
+
                   if (
                     selectedSchoolTypes.size > 0 &&
-                    !selectedSchoolTypes.has(s.properties.schultyp)
+                    !selectedSchoolTypes.has(schoolType)
                   )
                     return false;
                   if (
                     selectedCarriers.size > 0 &&
-                    !selectedCarriers.has(s.properties.traeger)
+                    !selectedCarriers.has(operator)
                   )
                     return false;
-                  if (
-                    showAfter4thGradeOnly &&
-                    !s.properties.acceptsAfter4thGrade
-                  )
-                    return false;
-                  return s.properties.bezirk === district;
+                  if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+                  return itemDistrict === district;
                 });
                 return (
                   <Checkbox
@@ -382,28 +437,39 @@ export function FilterPanel({
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => {
-                    const count = countSchoolsWithFilter((s) => {
+                    const count = countItemsWithFilter((item) => {
+                      const isSchool = "school" in item;
+                      if (!isSchool) return false; // Tags only apply to schools
+
+                      const school = (item as EnrichedSchool).school;
+                      const operator = school.operator;
+                      const district = school.district;
+                      const schoolType = school.school_category;
+                      const acceptsAfter4th =
+                        (item as EnrichedSchool).details
+                          ?.available_after_4th_grade || false;
+
                       if (
                         selectedSchoolTypes.size > 0 &&
-                        !selectedSchoolTypes.has(s.properties.schultyp)
+                        !selectedSchoolTypes.has(schoolType)
                       )
                         return false;
                       if (
                         selectedCarriers.size > 0 &&
-                        !selectedCarriers.has(s.properties.traeger)
+                        !selectedCarriers.has(operator)
                       )
                         return false;
                       if (
                         selectedDistricts.size > 0 &&
-                        !selectedDistricts.has(s.properties.bezirk)
+                        !selectedDistricts.has(district)
                       )
                         return false;
-                      if (
-                        showAfter4thGradeOnly &&
-                        !s.properties.acceptsAfter4thGrade
-                      )
+                      if (showAfter4thGradeOnly && !acceptsAfter4th)
                         return false;
-                      return schoolHasTag(s.id, tag.id);
+                      return schoolHasTag(
+                        `schulen.${school.school_number}`,
+                        tag.id,
+                      );
                     });
 
                     return (
@@ -444,30 +510,51 @@ export function FilterPanel({
                 <span className="text-base">⚡</span>
                 <span className="text-xs text-default-700">
                   Entry After 4th Grade Available (
-                  {countSchoolsWithFilter((s) => {
+                  {countItemsWithFilter((item) => {
+                    const isSchool = "school" in item;
+                    const school = isSchool
+                      ? (item as EnrichedSchool).school
+                      : null;
+                    const project = !isSchool
+                      ? (item as ConstructionProject)
+                      : null;
+
+                    const operator = school?.operator || "öffentlich";
+                    const district =
+                      school?.district || project?.district || "";
+                    const schoolType =
+                      school?.school_category || project?.school_type || "";
+                    const acceptsAfter4th = isSchool
+                      ? (item as EnrichedSchool).details
+                          ?.available_after_4th_grade || false
+                      : false;
+
                     if (
                       selectedSchoolTypes.size > 0 &&
-                      !selectedSchoolTypes.has(s.properties.schultyp)
+                      !selectedSchoolTypes.has(schoolType)
                     )
                       return false;
                     if (
                       selectedCarriers.size > 0 &&
-                      !selectedCarriers.has(s.properties.traeger)
+                      !selectedCarriers.has(operator)
                     )
                       return false;
                     if (
                       selectedDistricts.size > 0 &&
-                      !selectedDistricts.has(s.properties.bezirk)
+                      !selectedDistricts.has(district)
                     )
                       return false;
-                    if (selectedTags.size > 0) {
-                      const schoolTagIds = getSchoolTags(s.id).map((t) => t.id);
+                    if (selectedTags.size > 0 && isSchool) {
+                      const schoolNumber = school?.school_number || "";
+                      const schoolTagIds = getSchoolTags(
+                        `schulen.${schoolNumber}`,
+                      ).map((t) => t.id);
                       const hasAnySelectedTag = Array.from(selectedTags).some(
                         (tagId) => schoolTagIds.includes(tagId),
                       );
                       if (!hasAnySelectedTag) return false;
                     }
-                    return s.properties.acceptsAfter4thGrade;
+                    return acceptsAfter4th;
                   })}
                   )
                 </span>

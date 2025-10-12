@@ -4,79 +4,6 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
-// School Statistics Types
-export interface SchoolStats {
-  schuljahr: string; // School year (e.g., "2024/25")
-  bsn: string; // School number (BSN)
-  name: string; // School name
-  schuelerGesamt: number; // Total students (m/w/d)
-  schuelerWeiblich: number; // Female students
-  schuelerMaennlich: number; // Male students
-  lehrkraefteGesamt: number; // Total teachers (m/w/d)
-  lehrkraefteWeiblich: number; // Female teachers
-  lehrkraefteMaennlich: number; // Male teachers
-}
-
-// Berlin Schools WFS API Types
-export interface SchoolProperties {
-  bsn: string; // School number (e.g., "01B01")
-  schulname: string; // School name
-  schulart: string; // School type (e.g., "Oberstufenzentrum", "Grundschule")
-  traeger: string; // Operator (e.g., "öffentlich", "privat")
-  schultyp: string; // School category (e.g., "Berufsschule", "Grundschule")
-  bezirk: string; // District (e.g., "Mitte", "Charlottenburg-Wilmersdorf")
-  ortsteil: string; // Neighborhood
-  plz: string; // Postal code
-  strasse: string; // Street name
-  hausnr: string; // House number
-  telefon: string; // Phone number
-  fax: string; // Fax number
-  email: string; // Email address
-  internet: string; // Website URL
-  schuljahr: string; // School year (e.g., "2025/26")
-  constructionHistory?: ConstructionProject[]; // Associated construction projects
-  isConstructionProject?: boolean; // Flag indicating this is a standalone construction project
-  constructionData?: ConstructionProject; // Original construction project data for standalone projects
-  stats?: SchoolStats; // School statistics (students, teachers)
-  acceptsAfter4thGrade?: boolean; // Whether the school accepts students after 4th grade
-}
-
-export interface SchoolFeature {
-  type: "Feature";
-  id: string; // Feature ID (e.g., "schulen.01B01")
-  geometry: {
-    type: "Point";
-    coordinates: [number, number]; // [longitude, latitude]
-  };
-  geometry_name: string; // Geometry field name (e.g., "geom")
-  properties: SchoolProperties;
-  bbox: [number, number, number, number]; // Bounding box
-}
-
-export interface SchoolsGeoJSON {
-  type: "FeatureCollection";
-  features: SchoolFeature[];
-  totalFeatures: number; // Total number of features available
-  numberMatched: number; // Number of features matching the query
-  numberReturned: number; // Number of features in this response
-  timeStamp: string; // ISO timestamp
-  links?: Array<{
-    // Pagination links
-    title: string;
-    type: string;
-    rel: string;
-    href: string;
-  }>;
-  crs: {
-    // Coordinate reference system
-    type: "name";
-    properties: {
-      name: string; // e.g., "urn:ogc:def:crs:EPSG::4326"
-    };
-  };
-  bbox: [number, number, number, number]; // Overall bounding box
-}
-
 // User-defined tags for schools
 export interface SchoolTag {
   id: string; // Unique tag ID
@@ -97,37 +24,6 @@ export interface CustomLocation {
   label?: string; // Optional custom label
 }
 
-// Construction Projects API Types
-export interface ConstructionProject {
-  id: number;
-  schulnummer: string; // School number (BSN)
-  schulname: string; // School name
-  bezirk: string; // District
-  schulart: string; // School type
-  baumassnahme: string; // Construction measure (e.g., "Sanierung; Erweiterung")
-  beschreibung: string; // Description of the construction
-  gebaute_schulplaetze: string; // Built school places
-  schulplaetze_nach_baumassnahme: string; // School places after construction
-  zuegigkeit_nach_baumassnahme: string; // Class tracks after construction
-  nutzungsuebergabe: string; // Handover date (e.g., "2027/2028")
-  gesamtkosten: string; // Total costs
-  strasse: string; // Street
-  plz: string; // Postal code
-  ort: string; // City
-}
-
-export interface ConstructionProjectsResponse {
-  messages: {
-    messages: string[];
-    success: boolean;
-  };
-  results: {
-    count: number;
-    items_per_page: number;
-  };
-  index: ConstructionProject[];
-}
-
 // Helper type for project status
 export type ProjectStatus = "completed" | "ongoing" | "future" | "unknown";
 
@@ -135,4 +31,160 @@ export interface ProjectStatusInfo {
   status: ProjectStatus;
   completionYear?: number;
   isCompleted: boolean;
+}
+
+// Base School model
+export interface School {
+  id: number;
+  school_number: string; // BSN - School number (e.g., "01B01")
+  name: string; // School name
+  school_type: string; // School type (e.g., "Gymnasium", "Grundschule")
+  operator: string; // Operator (e.g., "öffentlich", "privat")
+  school_category: string; // School category
+  district: string; // District (Bezirk)
+  neighborhood: string; // Neighborhood (Ortsteil)
+  postal_code: string; // Postal code
+  street: string; // Street name
+  house_number: string; // House number
+  phone: string; // Phone number
+  fax: string; // Fax number
+  email: string; // Email address
+  website: string; // Website URL
+  school_year: string; // School year (e.g., "2025/26")
+  latitude: number; // Geographic coordinate
+  longitude: number; // Geographic coordinate
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
+// School Detail model
+export interface SchoolDetail {
+  id: number;
+  school_number: string; // BSN - Link to schools table
+  school_name: string; // Name of the school
+  languages: string; // Languages offered
+  courses: string; // Advanced courses (Leistungskurse)
+  offerings: string; // Programs and offerings
+  available_after_4th_grade: boolean; // Accepts students after 4th grade
+  additional_info: string; // Additional information
+  equipment: string; // Equipment and facilities
+  working_groups: string; // Working groups/extracurricular activities
+  partners: string; // External partners
+  differentiation: string; // Differentiation methods
+  lunch_info: string; // Lunch information
+  dual_learning: string; // Dual learning programs
+  citizenship_data: string; // JSON string
+  language_data: string; // JSON string
+  residence_data: string; // JSON string
+  absence_data: string; // JSON string
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
+// Citizenship statistics
+export interface SchoolCitizenshipStat {
+  id: number;
+  school_number: string;
+  citizenship: string; // e.g., "Europa (ohne Deutschland)", "Afrika"
+  female_students: number;
+  male_students: number;
+  total: number;
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+}
+
+// Language statistics
+export interface SchoolLanguageStat {
+  id: number;
+  school_number: string;
+  total_students: number;
+  ndh_female_students: number; // Non-German heritage female
+  ndh_male_students: number; // Non-German heritage male
+  ndh_total: number; // Non-German heritage total
+  ndh_percentage: number; // Percentage
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+}
+
+// Residence statistics
+export interface SchoolResidenceStat {
+  id: number;
+  school_number: string;
+  district: string; // District where students live
+  student_count: number;
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+}
+
+// Absence statistics
+export interface SchoolAbsenceStat {
+  id: number;
+  school_number: string;
+  school_absence_rate: number;
+  school_unexcused_rate: number;
+  school_type_absence_rate: number;
+  school_type_unexcused_rate: number;
+  region_absence_rate: number;
+  region_unexcused_rate: number;
+  berlin_absence_rate: number;
+  berlin_unexcused_rate: number;
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+}
+
+// School statistics (students, teachers, classes by year)
+export interface SchoolStatistic {
+  id: number;
+  school_number: string;
+  school_name: string;
+  district: string;
+  school_type: string;
+  school_year: string; // e.g., "2023/24"
+  students: string; // Total number of students (m/w/d)
+  students_male: string; // Number of male students
+  students_female: string; // Number of female students
+  teachers: string; // Total number of teachers (m,w,d)
+  teachers_male: string; // Number of male teachers
+  teachers_female: string; // Number of female teachers
+  classes: string; // Number of classes
+  metadata: string; // JSON string with additional metadata
+  scraped_at: string; // ISO timestamp
+  created_at: string; // ISO timestamp
+}
+
+// Construction Project model
+export interface ConstructionProject {
+  id: number;
+  project_id: number;
+  school_number: string;
+  school_name: string;
+  district: string;
+  school_type: string;
+  construction_measure: string;
+  description: string;
+  built_school_places: string;
+  places_after_construction: string;
+  class_tracks_after_construction: string;
+  handover_date: string;
+  total_costs: string;
+  street: string;
+  postal_code: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+}
+
+// Enriched School model (combines all data)
+export interface EnrichedSchool {
+  school: School;
+  details?: SchoolDetail | null;
+  citizenship_stats?: SchoolCitizenshipStat[];
+  language_stat?: SchoolLanguageStat | null;
+  residence_stats?: SchoolResidenceStat[];
+  absence_stat?: SchoolAbsenceStat | null;
+  statistics?: SchoolStatistic[];
+  construction_projects?: ConstructionProject[];
 }

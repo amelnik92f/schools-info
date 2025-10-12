@@ -5,10 +5,10 @@ type SchoolSummaryParams = {
   bezirk?: string;
   website?: string;
   stats?: {
-    schuelerGesamt: number;
-    lehrkraefteGesamt: number;
-    schuelerWeiblich: number;
-    schuelerMaennlich: number;
+    total_students: number;
+    total_teachers: number;
+    female_students?: number;
+    male_students?: number;
   };
 };
 
@@ -30,11 +30,9 @@ ${
   stats
     ? `
 Student Statistics:
-- Total Students: ${stats.schuelerGesamt}
-- Female Students: ${stats.schuelerWeiblich}
-- Male Students: ${stats.schuelerMaennlich}
-- Total Teachers: ${stats.lehrkraefteGesamt}
-- Student-Teacher Ratio: ${(stats.schuelerGesamt / stats.lehrkraefteGesamt).toFixed(1)}:1
+- Total Students: ${stats.total_students}${stats.female_students && stats.male_students ? ` (${stats.female_students} female, ${stats.male_students} male)` : ""}
+- Total Teachers: ${stats.total_teachers}
+- Student-Teacher Ratio: ${(stats.total_students / stats.total_teachers).toFixed(1)}:1
 `
     : ""
 }
@@ -73,8 +71,9 @@ export const schoolSummaryV2 = ({
 - Website: ${website || "N/A"}
 ${
   stats
-    ? `- Total Students: ${stats.schuelerGesamt}
-- Student-Teacher Ratio: ${(stats.schuelerGesamt / stats.lehrkraefteGesamt).toFixed(1)}:1
+    ? `- Total Students: ${stats.total_students}${stats.female_students && stats.male_students ? ` (${stats.female_students} female, ${stats.male_students} male)` : ""}
+- Student-Teacher Ratio: ${(stats.total_students / stats.total_teachers).toFixed(1)}:1
+${stats.total_classes ? `- Total Classes: ${stats.total_classes}` : ""}
 `
     : ""
 }

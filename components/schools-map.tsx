@@ -8,7 +8,11 @@ import MapGL, {
   MapRef,
 } from "react-map-gl/maplibre";
 import clsx from "clsx";
-import { SchoolsGeoJSON, SchoolFeature, LocationType } from "@/types";
+import {
+  EnrichedSchool,
+  ConstructionProject,
+  LocationType,
+} from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
@@ -20,10 +24,11 @@ import { CustomLocationPopup } from "./schools-map/CustomLocationPopup";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
-  schoolsData: SchoolsGeoJSON; // Already enriched with construction data
+  schools: EnrichedSchool[];
+  standaloneProjects: ConstructionProject[];
 }
 
-export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
+export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
   const mapRef = useRef<MapRef>(null);
 
   // Zustand store
@@ -59,61 +64,77 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
 
   const mapStyle = "https://tiles.openfreemap.org/styles/bright"; // OSM Bright GL Style
 
+  // Combine schools and standalone projects
+  const allItems = useMemo(() => {
+    return [...schools, ...standaloneProjects];
+  }, [schools, standaloneProjects]);
+
   // Filter schools based on all criteria
-  const filteredSchools = useMemo(() => {
-    return schoolsData.features.filter((school) => {
+  const filteredItems = useMemo(() => {
+    return allItems.filter((item) => {
+      // Determine if it's a school or standalone project
+      const isSchool = "school" in item;
+      const school = isSchool ? (item as EnrichedSchool).school : null;
+      const project = !isSchool ? (item as ConstructionProject) : null;
+
+      const name = school?.name || project?.school_name || "";
+      const street = school?.street || project?.street || "";
+      const district = school?.district || project?.district || "";
+      const schoolType = school?.school_category || project?.school_type || "";
+      const operator = school?.operator || "öffentlich";
+      const acceptsAfter4th = isSchool
+        ? (item as EnrichedSchool).details?.available_after_4th_grade || false
+        : false;
+
       // Search query filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-          school.properties.schulname.toLowerCase().includes(query) ||
-          school.properties.strasse.toLowerCase().includes(query) ||
-          school.properties.bezirk.toLowerCase().includes(query);
+          name.toLowerCase().includes(query) ||
+          street.toLowerCase().includes(query) ||
+          district.toLowerCase().includes(query);
         if (!matchesSearch) return false;
       }
 
       // School type filter
       if (
         selectedSchoolTypes.size > 0 &&
-        !selectedSchoolTypes.has(school.properties.schultyp)
+        !selectedSchoolTypes.has(schoolType)
       ) {
         return false;
       }
 
       // Carrier filter
-      if (
-        selectedCarriers.size > 0 &&
-        !selectedCarriers.has(school.properties.traeger)
-      ) {
+      if (selectedCarriers.size > 0 && !selectedCarriers.has(operator)) {
         return false;
       }
 
       // District filter
-      if (
-        selectedDistricts.size > 0 &&
-        !selectedDistricts.has(school.properties.bezirk)
-      ) {
+      if (selectedDistricts.size > 0 && !selectedDistricts.has(district)) {
         return false;
       }
 
-      // Tag filter
-      if (selectedTags.size > 0) {
-        const schoolTagIds = getSchoolTags(school.id).map((t) => t.id);
+      // Tag filter (only for schools)
+      if (selectedTags.size > 0 && isSchool) {
+        const schoolNumber = school?.school_number || "";
+        const schoolTagIds = getSchoolTags(`schulen.${schoolNumber}`).map(
+          (t) => t.id,
+        );
         const hasAnySelectedTag = Array.from(selectedTags).some((tagId) =>
           schoolTagIds.includes(tagId),
         );
         if (!hasAnySelectedTag) return false;
       }
 
-      // After 4th grade filter
-      if (showAfter4thGradeOnly && !school.properties.acceptsAfter4thGrade) {
+      // After 4th grade filter (only for schools)
+      if (showAfter4thGradeOnly && !acceptsAfter4th) {
         return false;
       }
 
       return true;
     });
   }, [
-    schoolsData.features,
+    allItems,
     searchQuery,
     selectedSchoolTypes,
     selectedCarriers,
@@ -124,8 +145,8 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
   ]);
 
   const handleMarkerClick = useCallback(
-    (school: SchoolFeature) => {
-      setSelectedSchool(school);
+    (item: EnrichedSchool | ConstructionProject) => {
+      setSelectedSchool(item);
       // Close filter panel on mobile when selecting a school
       if (typeof window !== "undefined" && window.innerWidth < 768) {
         setShowFilters(false);
@@ -199,8 +220,9 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
         {/* Filter Panel - scrollable */}
         <div className="flex-1 overflow-y-auto">
           <FilterPanel
-            schoolsData={schoolsData}
-            filteredSchoolsCount={filteredSchools.length}
+            schools={schools}
+            standaloneProjects={standaloneProjects}
+            filteredItemsCount={filteredItems.length}
             mapRef={mapRef}
           />
         </div>
@@ -216,7 +238,7 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
           )}
         >
           <SchoolDetailsPanel
-            school={selectedSchool}
+            item={selectedSchool}
             onClose={handleClosePopup}
           />
         </div>
@@ -265,14 +287,32 @@ export function SchoolsMap({ schoolsData }: SchoolsMapProps) {
           )}
 
           {/* School and Construction Project Markers */}
-          {filteredSchools.map((school) => (
-            <SchoolMarker
-              key={school.id}
-              school={school}
-              isSelected={selectedSchool?.id === school.id}
-              onClick={handleMarkerClick}
-            />
-          ))}
+          {filteredItems.map((item) => {
+            const isSchool = "school" in item;
+            const school = isSchool ? (item as EnrichedSchool).school : null;
+            const project = !isSchool
+              ? (item as ConstructionProject)
+              : null;
+            const id = school
+              ? `schulen.${school.school_number}`
+              : `construction.${project?.id}`;
+            const latitude = school?.latitude || project?.latitude || 0;
+            const longitude = school?.longitude || project?.longitude || 0;
+
+            return (
+              <SchoolMarker
+                key={id}
+                item={item}
+                isSelected={
+                  isSchool
+                    ? (selectedSchool as any)?.school?.school_number ===
+                      school?.school_number
+                    : (selectedSchool as any)?.id === project?.id
+                }
+                onClick={handleMarkerClick}
+              />
+            );
+          })}
 
           {/* Custom Location Popups */}
           {selectedCustomLocation && locations[selectedCustomLocation] && (

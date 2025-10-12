@@ -19,8 +19,8 @@ export const CONSTRUCTION_STRIPE_COLOR = "#ffffff"; // white stripes for better 
 export const getProjectStatus = (
   project: ConstructionProject,
 ): ProjectStatusInfo => {
-  const dateStr = project.nutzungsuebergabe;
-  const currentYear = 2025; // October 2025
+  const dateStr = project.handover_date;
+  const currentYear = new Date().getFullYear();
 
   if (!dateStr || dateStr === "k.A.") {
     return { status: "unknown", isCompleted: false };

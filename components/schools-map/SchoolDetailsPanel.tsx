@@ -6,7 +6,7 @@ import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { Popover, PopoverTrigger, PopoverContent } from "@heroui/popover";
-import { SchoolFeature } from "@/types";
+import { EnrichedSchool, ConstructionProject } from "@/types";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useAISummaryStore } from "@/lib/store/ai-summary-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
@@ -32,14 +32,11 @@ function createGoogleEarthLink(latitude: number, longitude: number): string {
 }
 
 interface SchoolDetailsPanelProps {
-  school: SchoolFeature;
+  item: EnrichedSchool | ConstructionProject;
   onClose: () => void;
 }
 
-export function SchoolDetailsPanel({
-  school,
-  onClose,
-}: SchoolDetailsPanelProps) {
+export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
   const {
     tags,
     isLoaded: tagsLoaded,
@@ -56,15 +53,65 @@ export function SchoolDetailsPanel({
 
   const { hasLocation } = useCustomLocationsStore();
 
+  // Determine if this is a school or standalone construction project
+  const isSchool = "school" in item;
+  const isStandaloneProject = !isSchool;
+
+  // Extract data based on type
+  const enrichedSchool = isSchool ? (item as EnrichedSchool) : null;
+  const standaloneProject = isStandaloneProject
+    ? (item as ConstructionProject)
+    : null;
+
+  const school = enrichedSchool?.school || null;
+  const details = enrichedSchool?.details || null;
+  const constructionProjects = enrichedSchool?.construction_projects || [];
+
+  // TODO: Display language, residence, absence, citizenship stats
+  const languageStat = enrichedSchool?.language_stat || null;
+  const absenceStat = enrichedSchool?.absence_stat || null;
+  const citizenshipStats = enrichedSchool?.citizenship_stats || [];
+  const residenceStats = enrichedSchool?.residence_stats || [];
+  const statistics = enrichedSchool?.statistics || [];
+
+  // Common properties
+  const bsn = school?.school_number || standaloneProject?.school_number || "";
+  const name = school?.name || standaloneProject?.school_name || "";
+  const schoolType =
+    school?.school_category || standaloneProject?.school_type || "";
+  const district = school?.district || standaloneProject?.district || "";
+  const street = school?.street || standaloneProject?.street || "";
+  const houseNumber = school?.house_number || "";
+  const postalCode =
+    school?.postal_code || standaloneProject?.postal_code || "";
+  const latitude = school?.latitude || standaloneProject?.latitude || 0;
+  const longitude = school?.longitude || standaloneProject?.longitude || 0;
+  const website = school?.website || "";
+  const phone = school?.phone || "";
+  const email = school?.email || "";
+  const operator = school?.operator || "öffentlich";
+  const stats = statistics && statistics.length > 0 ? statistics[0] : null;
+
   const handleSummarizeSchool = async () => {
+    if (!isSchool) return; // Only schools can be summarized
+
+    const statsForAI = stats
+      ? {
+          total_students: stats.students,
+          total_teachers: stats.teachers,
+          female_students: stats.students_female,
+          male_students: stats.students_male,
+        }
+      : undefined;
+
     await fetchSummary({
-      bsn: school.properties.bsn,
-      schoolName: school.properties.schulname,
-      schoolType: school.properties.schultyp,
-      address: `${school.properties.strasse} ${school.properties.hausnr}, ${school.properties.plz} Berlin`,
-      website: school.properties.internet,
-      bezirk: school.properties.bezirk,
-      stats: school.properties.stats,
+      bsn,
+      schoolName: name,
+      schoolType,
+      address: `${street} ${houseNumber}, ${postalCode} Berlin`,
+      website,
+      bezirk: district,
+      stats: statsForAI,
     });
   };
 
@@ -74,15 +121,14 @@ export function SchoolDetailsPanel({
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
           {/* Show construction project header if it's a standalone project */}
-          {school.properties.isConstructionProject &&
-          school.properties.constructionData ? (
+          {isStandaloneProject && standaloneProject ? (
             <>
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🏗️</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-lg font-bold text-foreground">
-                      {school.properties.schulname}
+                      {name}
                     </h3>
                     <Button
                       size="sm"
@@ -103,13 +149,10 @@ export function SchoolDetailsPanel({
                       size="sm"
                       variant="flat"
                       color={getStatusColor(
-                        getProjectStatus(school.properties.constructionData)
-                          .status,
+                        getProjectStatus(standaloneProject).status,
                       )}
                     >
-                      {getStatusLabel(
-                        getProjectStatus(school.properties.constructionData),
-                      )}
+                      {getStatusLabel(getProjectStatus(standaloneProject))}
                     </Chip>
                   </div>
                 </div>
@@ -118,9 +161,7 @@ export function SchoolDetailsPanel({
           ) : (
             <>
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-xl font-bold text-foreground">
-                  {school.properties.schulname}
-                </h3>
+                <h3 className="text-xl font-bold text-foreground">{name}</h3>
                 <Button
                   size="sm"
                   variant="light"
@@ -138,16 +179,16 @@ export function SchoolDetailsPanel({
                   size="sm"
                   variant="flat"
                   style={{
-                    backgroundColor: `${getMarkerColor(school.properties.schultyp)}20`,
-                    color: getMarkerColor(school.properties.schultyp),
+                    backgroundColor: `${getMarkerColor(schoolType)}20`,
+                    color: getMarkerColor(schoolType),
                   }}
                 >
-                  {school.properties.schultyp}
+                  {schoolType}
                 </Chip>
                 <Chip size="sm" variant="flat" color="default">
-                  {school.properties.traeger}
+                  {operator}
                 </Chip>
-                {school.properties.acceptsAfter4thGrade && (
+                {details?.available_after_4th_grade && (
                   <Chip
                     size="sm"
                     variant="solid"
@@ -164,19 +205,16 @@ export function SchoolDetailsPanel({
           <Divider />
 
           {/* For construction projects, show construction details */}
-          {school.properties.isConstructionProject &&
-          school.properties.constructionData ? (
+          {isStandaloneProject && standaloneProject ? (
             <div className="space-y-3 text-sm text-default-700">
               <div>
                 <span className="font-semibold text-foreground">
                   📍 Location:
                 </span>
                 <p className="mt-1">
-                  {school.properties.constructionData.strasse}
+                  {street}
                   <br />
-                  {school.properties.constructionData.plz}{" "}
-                  {school.properties.constructionData.ort},{" "}
-                  {school.properties.constructionData.bezirk}
+                  {postalCode} {standaloneProject.city}, {district}
                 </p>
               </div>
 
@@ -186,18 +224,14 @@ export function SchoolDetailsPanel({
                 <span className="font-semibold text-foreground">
                   🏫 School Type:
                 </span>
-                <p className="mt-1">
-                  {school.properties.constructionData.schulart}
-                </p>
+                <p className="mt-1">{schoolType}</p>
               </div>
 
               <div>
                 <span className="font-semibold text-foreground">
                   🔨 Construction Type:
                 </span>
-                <p className="mt-1">
-                  {school.properties.constructionData.baumassnahme}
-                </p>
+                <p className="mt-1">{standaloneProject.construction_measure}</p>
               </div>
 
               <div>
@@ -205,29 +239,25 @@ export function SchoolDetailsPanel({
                   📝 Description:
                 </span>
                 <p className="mt-1 leading-relaxed">
-                  {school.properties.constructionData.beschreibung}
+                  {standaloneProject.description}
                 </p>
               </div>
 
-              {school.properties.constructionData.nutzungsuebergabe && (
+              {standaloneProject.handover_date && (
                 <div>
                   <span className="font-semibold text-foreground">
                     📅 Expected Completion:
                   </span>
-                  <p className="mt-1">
-                    {school.properties.constructionData.nutzungsuebergabe}
-                  </p>
+                  <p className="mt-1">{standaloneProject.handover_date}</p>
                 </div>
               )}
 
-              {school.properties.constructionData.gesamtkosten && (
+              {standaloneProject.total_costs && (
                 <div>
                   <span className="font-semibold text-foreground">
                     💰 Total Cost:
                   </span>
-                  <p className="mt-1">
-                    {school.properties.constructionData.gesamtkosten}
-                  </p>
+                  <p className="mt-1">{standaloneProject.total_costs}</p>
                 </div>
               )}
 
@@ -239,10 +269,7 @@ export function SchoolDetailsPanel({
                 </span>
                 <div className="mt-1">
                   <Link
-                    href={createGoogleEarthLink(
-                      school.geometry.coordinates[1],
-                      school.geometry.coordinates[0],
-                    )}
+                    href={createGoogleEarthLink(latitude, longitude)}
                     isExternal
                     size="sm"
                     className="text-primary"
@@ -252,34 +279,25 @@ export function SchoolDetailsPanel({
                 </div>
               </div>
 
-              {(school.properties.constructionData
-                .schulplaetze_nach_baumassnahme !== "k.A." ||
-                school.properties.constructionData
-                  .zuegigkeit_nach_baumassnahme !== "k.A.") && (
+              {(standaloneProject.places_after_construction !== "k.A." ||
+                standaloneProject.class_tracks_after_construction !==
+                  "k.A.") && (
                 <>
                   <Divider />
                   <div>
                     <span className="font-semibold text-foreground">
                       📊 Capacity After Construction:
                     </span>
-                    {school.properties.constructionData
-                      .schulplaetze_nach_baumassnahme !== "k.A." && (
+                    {standaloneProject.places_after_construction !== "k.A." && (
                       <p className="mt-1">
-                        Places:{" "}
-                        {
-                          school.properties.constructionData
-                            .schulplaetze_nach_baumassnahme
-                        }
+                        Places: {standaloneProject.places_after_construction}
                       </p>
                     )}
-                    {school.properties.constructionData
-                      .zuegigkeit_nach_baumassnahme !== "k.A." && (
+                    {standaloneProject.class_tracks_after_construction !==
+                      "k.A." && (
                       <p className="mt-1">
                         Tracks:{" "}
-                        {
-                          school.properties.constructionData
-                            .zuegigkeit_nach_baumassnahme
-                        }
+                        {standaloneProject.class_tracks_after_construction}
                       </p>
                     )}
                   </div>
@@ -291,42 +309,42 @@ export function SchoolDetailsPanel({
               <div className="flex items-start gap-2">
                 <span className="text-base">📍</span>
                 <span>
-                  {school.properties.strasse} {school.properties.hausnr}
+                  {street} {houseNumber}
                   <br />
-                  {school.properties.plz} Berlin, {school.properties.bezirk}
+                  {postalCode} Berlin, {district}
                 </span>
               </div>
 
-              {school.properties.telefon && (
+              {phone && (
                 <div className="flex items-center gap-2">
                   <span className="text-base">📞</span>
-                  <span>{school.properties.telefon}</span>
+                  <span>{phone}</span>
                 </div>
               )}
 
-              {school.properties.email && (
+              {email && (
                 <div className="flex items-center gap-2">
                   <span className="text-base">✉️</span>
                   <Link
-                    href={`mailto:${school.properties.email}`}
+                    href={`mailto:${email}`}
                     size="sm"
                     className="text-primary"
                   >
-                    {school.properties.email}
+                    {email}
                   </Link>
                 </div>
               )}
 
-              {school.properties.internet && (
+              {website && (
                 <div className="flex items-center gap-2">
                   <span className="text-base">🌐</span>
                   <Link
-                    href={school.properties.internet}
+                    href={website}
                     isExternal
                     size="sm"
                     className="text-primary break-all"
                   >
-                    {school.properties.internet}
+                    {website}
                   </Link>
                 </div>
               )}
@@ -334,10 +352,7 @@ export function SchoolDetailsPanel({
               <div className="flex items-center gap-2">
                 <span className="text-base">🌍</span>
                 <Link
-                  href={createGoogleEarthLink(
-                    school.geometry.coordinates[1],
-                    school.geometry.coordinates[0],
-                  )}
+                  href={createGoogleEarthLink(latitude, longitude)}
                   isExternal
                   size="sm"
                   className="text-primary"
@@ -349,7 +364,7 @@ export function SchoolDetailsPanel({
           )}
 
           {/* AI Summary Button & Content Section */}
-          {!school.properties.isConstructionProject && (
+          {isSchool && (
             <>
               <Divider />
               <div>
@@ -386,48 +401,47 @@ export function SchoolDetailsPanel({
                 </div>
 
                 {/* Summarize Button - Only show if no summary */}
-                {!getSummary(school.properties.bsn) &&
-                  !getSummaryError(school.properties.bsn) && (
-                    <Button
-                      size="sm"
-                      variant="solid"
-                      fullWidth
-                      startContent={
-                        isSummaryLoading(school.properties.bsn) ? (
-                          <Spinner size="sm" color="white" />
-                        ) : (
-                          <SparklesIcon size={16} />
-                        )
-                      }
-                      onPress={handleSummarizeSchool}
-                      isDisabled={isSummaryLoading(school.properties.bsn)}
-                      className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
-                      }}
-                    >
-                      {isSummaryLoading(school.properties.bsn)
-                        ? "Summarizing..."
-                        : "Generate AI Summary"}
-                    </Button>
-                  )}
+                {!getSummary(bsn) && !getSummaryError(bsn) && (
+                  <Button
+                    size="sm"
+                    variant="solid"
+                    fullWidth
+                    startContent={
+                      isSummaryLoading(bsn) ? (
+                        <Spinner size="sm" color="white" />
+                      ) : (
+                        <SparklesIcon size={16} />
+                      )
+                    }
+                    onPress={handleSummarizeSchool}
+                    isDisabled={isSummaryLoading(bsn)}
+                    className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #6366f1 100%)",
+                    }}
+                  >
+                    {isSummaryLoading(bsn)
+                      ? "Summarizing..."
+                      : "Generate AI Summary"}
+                  </Button>
+                )}
 
                 {/* AI Summary Content */}
-                {getSummaryError(school.properties.bsn) && (
+                {getSummaryError(bsn) && (
                   <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
                     <p className="text-xs text-danger">
-                      ⚠️ {getSummaryError(school.properties.bsn)}
+                      ⚠️ {getSummaryError(bsn)}
                     </p>
                   </div>
                 )}
 
-                {getSummary(school.properties.bsn) && (
+                {getSummary(bsn) && (
                   <div className="relative max-h-[200px] overflow-y-auto rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
                     <div className="p-3 text-xs text-default-700 leading-relaxed prose prose-sm max-w-none">
                       <div
                         dangerouslySetInnerHTML={{
-                          __html: getSummary(school.properties.bsn)!
+                          __html: getSummary(bsn)!
                             .replace(
                               /\*\*(.*?)\*\*/g,
                               '<strong class="text-foreground font-semibold">$1</strong>',
@@ -449,21 +463,21 @@ export function SchoolDetailsPanel({
           )}
 
           {/* Travel Time Section */}
-          {!school.properties.isConstructionProject && hasLocation("home") && (
+          {isSchool && hasLocation("home") && (
             <TravelTimeSection
-              schoolCoordinates={school.geometry.coordinates}
-              schoolId={school.id}
+              schoolCoordinates={[longitude, latitude]}
+              schoolId={`schulen.${bsn}`}
             />
           )}
 
           {/* Statistics Section */}
-          {school.properties.stats && (
+          {stats && (
             <>
               <Divider />
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-semibold text-foreground">
-                    📊 Statistics ({school.properties.stats.schuljahr})
+                    📊 Statistics ({stats.school_year})
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -478,21 +492,15 @@ export function SchoolDetailsPanel({
                     <div className="space-y-1 text-xs text-default-700">
                       <div className="flex justify-between">
                         <span>Total:</span>
-                        <span className="font-semibold">
-                          {school.properties.stats.schuelerGesamt.toLocaleString()}
-                        </span>
+                        <span className="font-semibold">{stats.students}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Female:</span>
-                        <span>
-                          {school.properties.stats.schuelerWeiblich.toLocaleString()}
-                        </span>
+                        <span>{stats.students_female}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Male:</span>
-                        <span>
-                          {school.properties.stats.schuelerMaennlich.toLocaleString()}
-                        </span>
+                        <span>{stats.students_male}</span>
                       </div>
                     </div>
                   </div>
@@ -508,28 +516,22 @@ export function SchoolDetailsPanel({
                     <div className="space-y-1 text-xs text-default-700">
                       <div className="flex justify-between">
                         <span>Total:</span>
-                        <span className="font-semibold">
-                          {school.properties.stats.lehrkraefteGesamt.toLocaleString()}
-                        </span>
+                        <span className="font-semibold">{stats.teachers}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Female:</span>
-                        <span>
-                          {school.properties.stats.lehrkraefteWeiblich.toLocaleString()}
-                        </span>
+                        <span>{stats.teachers_female}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Male:</span>
-                        <span>
-                          {school.properties.stats.lehrkraefteMaennlich.toLocaleString()}
-                        </span>
+                        <span>{stats.teachers_male}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Student-Teacher Ratio */}
-                {school.properties.stats.lehrkraefteGesamt > 0 && (
+                {Number(stats.teachers) > 0 && (
                   <div className="mt-3 p-2 rounded-lg bg-primary/10">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-foreground font-semibold">
@@ -537,8 +539,7 @@ export function SchoolDetailsPanel({
                       </span>
                       <span className="text-foreground font-bold">
                         {(
-                          school.properties.stats.schuelerGesamt /
-                          school.properties.stats.lehrkraefteGesamt
+                          Number(stats.students) / Number(stats.teachers)
                         ).toFixed(1)}
                         :1
                       </span>
@@ -550,54 +551,54 @@ export function SchoolDetailsPanel({
           )}
 
           {/* Construction History Section */}
-          {school.properties.constructionHistory &&
-            school.properties.constructionHistory.length > 0 && (
-              <>
-                <Divider />
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-semibold text-foreground">
-                      🏗️ Construction History
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {school.properties.constructionHistory.map((project) => {
-                      const statusInfo = getProjectStatus(project);
-                      return (
-                        <div
-                          key={project.id}
-                          className="p-2 rounded-lg bg-content2"
-                        >
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <span className="text-xs font-semibold text-foreground">
-                              {project.baumassnahme}
-                            </span>
-                            <Chip
-                              size="sm"
-                              variant="flat"
-                              color={getStatusColor(statusInfo.status)}
-                              className="h-5"
-                            >
-                              {getStatusLabel(statusInfo)}
-                            </Chip>
-                          </div>
-                          {project.beschreibung && (
-                            <p className="text-xs text-default-600 leading-relaxed">
-                              {project.beschreibung}
-                            </p>
-                          )}
-                          {project.gesamtkosten && (
-                            <p className="text-xs text-default-500 mt-1">
-                              💰 {project.gesamtkosten}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+          {constructionProjects && constructionProjects.length > 0 && (
+            <>
+              <Divider />
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-semibold text-foreground">
+                    🏗️ Construction History
+                  </span>
                 </div>
-              </>
-            )}
+                <div className="space-y-2">
+                  {constructionProjects.map((project) => {
+                    // Convert to frontend format for getProjectStatus
+                    const statusInfo = getProjectStatus(project);
+                    return (
+                      <div
+                        key={project.id}
+                        className="p-2 rounded-lg bg-content2"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="text-xs font-semibold text-foreground">
+                            {project.construction_measure}
+                          </span>
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            color={getStatusColor(statusInfo.status)}
+                            className="h-5"
+                          >
+                            {getStatusLabel(statusInfo)}
+                          </Chip>
+                        </div>
+                        {project.description && (
+                          <p className="text-xs text-default-600 leading-relaxed">
+                            {project.description}
+                          </p>
+                        )}
+                        {project.total_costs && (
+                          <p className="text-xs text-default-500 mt-1">
+                            💰 {project.total_costs}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Tags Section */}
           {tagsLoaded && (
@@ -611,7 +612,7 @@ export function SchoolDetailsPanel({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => {
-                    const isActive = schoolHasTag(school.id, tag.id);
+                    const isActive = schoolHasTag(`schulen.${bsn}`, tag.id);
                     return (
                       <Chip
                         key={tag.id}
@@ -623,7 +624,9 @@ export function SchoolDetailsPanel({
                           color: isActive ? "#fff" : tag.color,
                           cursor: "pointer",
                         }}
-                        onClick={() => toggleTagOnSchool(school.id, tag.id)}
+                        onClick={() =>
+                          toggleTagOnSchool(`schulen.${bsn}`, tag.id)
+                        }
                       >
                         {isActive ? "✓ " : ""}
                         {tag.name}

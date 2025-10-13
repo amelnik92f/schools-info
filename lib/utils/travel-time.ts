@@ -5,6 +5,24 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+
+/**
+ * Get common headers for API requests including authentication
+ */
+function getApiHeaders(contentType?: string): HeadersInit {
+  const headers: HeadersInit = {};
+
+  if (contentType) {
+    headers["Content-Type"] = contentType;
+  }
+
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+
+  return headers;
+}
 
 export interface TravelTime {
   mode: "walking" | "bicycle" | "car";
@@ -37,9 +55,7 @@ export async function fetchTravelTimes(
       `${API_BASE_URL}/api/${API_VERSION}/schools/${id}/routes`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getApiHeaders("application/json"),
         body: JSON.stringify({
           start: fromCoords,
           end: toCoords,

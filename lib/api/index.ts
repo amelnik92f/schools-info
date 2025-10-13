@@ -11,15 +11,29 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 const apiUrl = `${API_BASE_URL}/api/${API_VERSION}`;
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+
+/**
+ * Get common headers for API requests including authentication
+ */
+function getApiHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    Accept: "application/json",
+  };
+
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+
+  return headers;
+}
 
 export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]> {
   const url = `${apiUrl}/schools`;
 
   try {
     const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-      },
+      headers: getApiHeaders(),
       // Add cache control for Next.js
       next: {
         revalidate: 3600, // Revalidate every hour
@@ -53,9 +67,7 @@ export async function fetchStandaloneConstructionProjects(): Promise<
 
   try {
     const response = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-      },
+      headers: getApiHeaders(),
       // Add cache control for Next.js
       next: {
         revalidate: 3600, // Revalidate every hour

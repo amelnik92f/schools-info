@@ -93,25 +93,12 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
   const stats = statistics && statistics.length > 0 ? statistics[0] : null;
 
   const handleSummarizeSchool = async () => {
-    if (!isSchool) return; // Only schools can be summarized
+    if (!isSchool || !school) return; // Only schools can be summarized
 
-    const statsForAI = stats
-      ? {
-          total_students: stats.students,
-          total_teachers: stats.teachers,
-          female_students: stats.students_female,
-          male_students: stats.students_male,
-        }
-      : undefined;
-
+    // Pass the database school ID for API and BSN for storage
     await fetchSummary({
-      bsn,
-      schoolName: name,
-      schoolType,
-      address: `${street} ${houseNumber}, ${postalCode} Berlin`,
-      website,
-      bezirk: district,
-      stats: statsForAI,
+      schoolId: school.id.toString(),
+      bsn: school.school_number,
     });
   };
 

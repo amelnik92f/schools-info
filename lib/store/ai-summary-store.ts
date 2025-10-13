@@ -32,13 +32,8 @@ interface AISummaryState {
 
   // Fetch summary from API
   fetchSummary: (params: {
-    bsn: string;
-    schoolName: string;
-    schoolType: string;
-    address: string;
-    website: string;
-    bezirk: string;
-    stats?: any;
+    schoolId: string; // Database ID for API call
+    bsn?: string; // School number for storage key (optional, defaults to schoolId)
   }) => Promise<void>;
 }
 
@@ -118,12 +113,13 @@ export const useAISummaryStore = create<AISummaryState>()(
       },
 
       fetchSummary: async (params) => {
-        const { bsn, schoolName, schoolType, address, website, bezirk, stats } =
-          params;
+        const { schoolId, bsn } = params;
+        // Use BSN for storage key if provided, otherwise use schoolId
+        const storageKey = bsn || schoolId;
 
         // Set loading state
-        get().setLoading(bsn, true);
-        get().clearError(bsn);
+        get().setLoading(storageKey, true);
+        get().clearError(storageKey);
 
         try {
           const response = await fetch("/api/summarize-school", {
@@ -132,12 +128,7 @@ export const useAISummaryStore = create<AISummaryState>()(
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              schoolName,
-              schoolType,
-              address,
-              website,
-              bezirk,
-              stats,
+              schoolId,
             }),
           });
 
@@ -147,17 +138,17 @@ export const useAISummaryStore = create<AISummaryState>()(
             throw new Error(data.error || "Failed to generate summary");
           }
 
-          // Save summary to store
-          get().setSummary(bsn, data.summary);
+          // Save summary to store using storage key
+          get().setSummary(storageKey, data.summary);
         } catch (error: any) {
           console.error("Error fetching AI summary:", error);
           get().setError(
-            bsn,
+            storageKey,
             error.message || "Failed to generate summary. Please try again.",
           );
           throw error;
         } finally {
-          get().setLoading(bsn, false);
+          get().setLoading(storageKey, false);
         }
       },
     }),

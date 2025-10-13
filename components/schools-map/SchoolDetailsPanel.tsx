@@ -363,6 +363,201 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             </div>
           )}
 
+          {/* School Details Sections */}
+          {details && (
+            <>
+              {/* Languages Section */}
+              {details.languages && details.languages.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🌐 Languages Offered
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.languages}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Advanced Courses Section */}
+              {details.courses && details.courses.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        📚 Advanced Courses (Leistungskurse)
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.courses}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Programs & Offerings Section */}
+              {details.offerings && details.offerings.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        ✨ Programs & Special Offerings
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.offerings}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Equipment & Facilities Section */}
+              {details.equipment && details.equipment.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🏢 Equipment & Facilities
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.equipment}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Working Groups & Activities Section */}
+              {details.working_groups && details.working_groups.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🎯 Working Groups & Extracurricular Activities
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.working_groups}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Partners Section */}
+              {details.partners && details.partners.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🤝 External Partners
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.partners}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Differentiation Methods Section */}
+              {details.differentiation && details.differentiation.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🎓 Differentiation & Teaching Methods
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.differentiation}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Lunch Information Section */}
+              {details.lunch_info && details.lunch_info.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        🍽️ Lunch & Meal Services
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.lunch_info}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Dual Learning Section */}
+              {details.dual_learning && details.dual_learning.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        💼 Dual Learning Programs
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.dual_learning}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Additional Information Section */}
+              {details.additional_info && details.additional_info.trim() && (
+                <>
+                  <Divider />
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-semibold text-foreground">
+                        ℹ️ Additional Information
+                      </span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-content2">
+                      <p className="text-xs text-default-700 leading-relaxed whitespace-pre-line">
+                        {details.additional_info}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
           {/* AI Summary Button & Content Section */}
           {isSchool && (
             <>
@@ -639,8 +834,8 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
                       </div>
                       <div className="flex items-center justify-between text-xs text-default-700 mb-2">
                         <div className="flex gap-3">
-                          <span>👩 Female: {totalRow.female_students}</span>
-                          <span>👨 Male: {totalRow.male_students}</span>
+                          <span>👩 Female: {totalRow.female_students}%</span>
+                          <span>👨 Male: {totalRow.male_students}%</span>
                         </div>
                         {stats && Number(stats.students) > 0 && (
                           <span className="font-semibold text-primary">

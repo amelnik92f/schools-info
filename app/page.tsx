@@ -18,3 +18,5 @@ export default async function Home() {
     </main>
   );
 }
+
+export const revalidate = 604800; // 7 days

@@ -5,7 +5,8 @@ import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import { useTravelTimeStore } from "@/lib/store/travel-time-store";
-import { formatDuration, TRAVEL_MODES } from "@/lib/utils/travel-time";
+import { TRAVEL_MODES } from "@/lib/utils/formatDuration";
+import { formatDuration } from "@/lib/utils/formatDuration";
 
 interface TravelTimeSectionProps {
   schoolCoordinates: [number, number]; // [longitude, latitude]

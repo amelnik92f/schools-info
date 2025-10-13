@@ -2,7 +2,7 @@ import { SchoolsMap } from "@/components/schools-map";
 import {
   fetchEnrichedSchools,
   fetchStandaloneConstructionProjects,
-} from "@/lib/api";
+} from "@/lib/actions/schools";
 
 export default async function Home() {
   const [schools, standaloneProjects] = await Promise.all([

@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { TravelTime, fetchTravelTimes } from "@/lib/utils/travel-time";
+import {
+  calculateTravelTimes
+} from "@/lib/actions/travel-time";
+import { TravelTime } from "@/lib/utils/formatDuration";
 
 // Generate a unique key for caching based on coordinates
 function generateCacheKey(
@@ -110,8 +113,9 @@ export const useTravelTimeStore = create<TravelTimeState>()(
         }));
 
         try {
-          // Fetch travel times from API
-          const travelTimes = await fetchTravelTimes(fromCoords, toCoords);
+          // Use server action to fetch travel times
+          // This keeps the API key secure on the server
+          const travelTimes = await calculateTravelTimes(fromCoords, toCoords);
 
           // Cache the result
           set((state) => ({

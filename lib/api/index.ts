@@ -11,12 +11,16 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 const apiUrl = `${API_BASE_URL}/api/${API_VERSION}`;
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY || "";
+
+// API_KEY is now server-side only (no NEXT_PUBLIC prefix)
+// This prevents it from being exposed in the client bundle
+const API_KEY = process.env.API_KEY || "";
 
 /**
  * Get common headers for API requests including authentication
+ * This should only be used in server-side code
  */
-function getApiHeaders(): HeadersInit {
+export function getApiHeaders(): HeadersInit {
   const headers: HeadersInit = {
     Accept: "application/json",
   };

@@ -12,9 +12,10 @@ Create a `.env.local` file in the root of the project (this file is gitignored):
 # Backend API Configuration
 NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8080
 
-# API Authentication
+# API Authentication (Server-Side Only)
 # IMPORTANT: This must match the API_KEY set in your backend .env file
-NEXT_PUBLIC_API_KEY=your-secure-api-key-here
+# NOTE: No NEXT_PUBLIC_ prefix - this keeps the key secure on the server
+API_KEY=your-secure-api-key-here
 ```
 
 ## Environment Variables Explained
@@ -29,7 +30,7 @@ NEXT_PUBLIC_API_KEY=your-secure-api-key-here
 - Development: `http://localhost:8080`
 - Production: `https://api.your-domain.com`
 
-### `NEXT_PUBLIC_API_KEY`
+### `API_KEY`
 
 **Purpose**: API key for authenticating requests to the backend
 
@@ -37,7 +38,9 @@ NEXT_PUBLIC_API_KEY=your-secure-api-key-here
 
 **Important Notes**:
 - This key **must match** the `API_KEY` configured in your backend's `.env` file
-- Use the `NEXT_PUBLIC_` prefix so Next.js can expose it to the browser
+- **Does NOT use** `NEXT_PUBLIC_` prefix - this keeps it server-side only
+- The key is **never exposed** to the browser or client-side JavaScript
+- All API calls use Next.js Server Actions to keep the key secure
 - Keep this key secure and never commit it to version control
 - Use different keys for development and production
 
@@ -65,20 +68,25 @@ The application uses these environment variables to:
 
 1. **Connect to the backend API** - All API requests use `NEXT_PUBLIC_BACKEND_API_URL` as the base URL
 
-2. **Authenticate requests** - The `NEXT_PUBLIC_API_KEY` is automatically included in all API requests through:
-   - `/lib/api/index.ts` - Main API client for schools and construction projects
-   - `/lib/utils/travel-time.ts` - Travel time calculations
-   - `/lib/store/ai-summary-store.ts` - AI-powered school summaries
+2. **Authenticate requests** - The `API_KEY` is used in Next.js Server Actions to authenticate API calls:
+   - `/lib/actions/schools.ts` - Server actions for schools and construction projects
+   - `/lib/actions/ai-summary.ts` - Server action for AI-powered summaries
+   - `/lib/actions/travel-time.ts` - Server action for travel time calculations
 
-3. **Client-side access** - Variables with `NEXT_PUBLIC_` prefix are embedded in the client-side bundle
+3. **Server-side security** - The API key is **only accessible on the server**:
+   - Server Actions execute on the server, never in the browser
+   - The API key is never bundled into client-side JavaScript
+   - Client components call server actions, which handle authentication
 
-## Security Notes
+## Security Features
 
-⚠️ **Important Security Considerations**:
+✅ **Enhanced Security**:
 
-- The `NEXT_PUBLIC_API_KEY` will be **visible in the browser** since it needs to be used client-side
-- For public-facing applications, consider implementing a backend-for-frontend (BFF) pattern where the frontend calls your own secure backend, which then calls the schools API
-- Never use this pattern with highly sensitive API keys
+- The `API_KEY` is **never exposed** to the browser or client-side code
+- All API calls go through Next.js Server Actions which run exclusively on the server
+- The API key cannot be intercepted or viewed by users
+- This architecture is secure for public-facing applications
+- No need for a backend-for-frontend (BFF) layer
 - Use different API keys for different environments
 - Rotate keys regularly
 
@@ -97,7 +105,7 @@ The application uses these environment variables to:
 **Cause**: Missing or invalid API key
 
 **Solution**:
-1. Verify `NEXT_PUBLIC_API_KEY` is set in `.env.local`
+1. Verify `API_KEY` (without NEXT_PUBLIC prefix) is set in `.env.local`
 2. Verify it matches the `API_KEY` in the backend's `.env` file
 3. Restart the Next.js dev server after changing environment variables
 
@@ -125,8 +133,10 @@ For production deployments (e.g., Vercel, Netlify):
 2. Navigate to "Environment Variables"
 3. Add:
    - `NEXT_PUBLIC_BACKEND_API_URL` = `https://your-api-domain.com`
-   - `NEXT_PUBLIC_API_KEY` = `your-production-api-key`
+   - `API_KEY` = `your-production-api-key` (without NEXT_PUBLIC prefix for security)
 4. Redeploy the application
+
+**Note**: The `API_KEY` variable will only be available in server-side code (Server Actions, API Routes, Server Components), which is exactly what we want for security.
 
 ## Related Documentation
 

@@ -2,6 +2,10 @@
  * Calculate travel time between two coordinates using OpenRouteService API
  */
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
+const API_VERSION = "v1";
+
 export interface TravelTime {
   mode: "walking" | "bicycle" | "car";
   durationMinutes: number;
@@ -24,19 +28,25 @@ export const TRAVEL_MODES: Array<{
 export async function fetchTravelTimes(
   fromCoords: [number, number], // [longitude, latitude]
   toCoords: [number, number], // [longitude, latitude]
+  schoolId?: string, // Optional school ID for the endpoint
 ): Promise<TravelTime[]> {
   try {
-    const response = await fetch("/api/travel-time", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    // Use school ID if provided, otherwise use "0" as a generic routes endpoint
+    const id = schoolId || "0";
+    const response = await fetch(
+      `${API_BASE_URL}/api/${API_VERSION}/schools/${id}/routes`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          start: fromCoords,
+          end: toCoords,
+          modes: TRAVEL_MODES.map((m) => m.mode),
+        }),
       },
-      body: JSON.stringify({
-        start: fromCoords,
-        end: toCoords,
-        modes: TRAVEL_MODES.map((m) => m.mode),
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);

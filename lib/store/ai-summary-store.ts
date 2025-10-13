@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
+const API_VERSION = "v1";
+
 interface AISummary {
   summary: string;
   timestamp: number; // When the summary was generated
@@ -122,15 +126,15 @@ export const useAISummaryStore = create<AISummaryState>()(
         get().clearError(storageKey);
 
         try {
-          const response = await fetch("/api/summarize-school", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+          const response = await fetch(
+            `${API_BASE_URL}/api/${API_VERSION}/schools/${schoolId}/summary`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
             },
-            body: JSON.stringify({
-              schoolId,
-            }),
-          });
+          );
 
           const data = await response.json();
 

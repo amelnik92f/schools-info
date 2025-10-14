@@ -201,7 +201,7 @@ Create `.env.local` in the project root:
 
 ```bash
 # Backend API URL (public - used for constructing URLs)
-NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8080
+API_URL=http://localhost:8080
 
 # API Key (private - only accessible on server)
 API_KEY=your-secure-api-key-here
@@ -211,7 +211,7 @@ API_KEY=your-secure-api-key-here
 
 | Variable | Accessible In | Bundled in Client JS? |
 |----------|--------------|----------------------|
-| `NEXT_PUBLIC_BACKEND_API_URL` | Everywhere | ✅ Yes (safe - just a URL) |
+| `API_URL` | Everywhere | ✅ Yes (safe - just a URL) |
 | `API_KEY` | Server only | ❌ No (secure) |
 
 The `API_KEY` variable can only be accessed in:

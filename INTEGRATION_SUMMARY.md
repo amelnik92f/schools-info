@@ -93,7 +93,7 @@ Set the backend URL via environment variable (optional):
 
 ```bash
 # .env.local
-NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8080
+API_URL=http://localhost:8080
 ```
 
 Defaults to `http://localhost:8080` if not set.

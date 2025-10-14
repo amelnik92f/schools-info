@@ -8,7 +8,7 @@
 import { EnrichedSchool, ConstructionProject } from "@/types";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
+  process.env.API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 const apiUrl = `${API_BASE_URL}/api/${API_VERSION}`;
 

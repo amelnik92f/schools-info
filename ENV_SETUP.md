@@ -10,7 +10,7 @@ Create a `.env.local` file in the root of the project (this file is gitignored):
 
 ```bash
 # Backend API Configuration
-NEXT_PUBLIC_BACKEND_API_URL=http://localhost:8080
+API_URL=http://localhost:8080
 
 # API Authentication (Server-Side Only)
 # IMPORTANT: This must match the API_KEY set in your backend .env file
@@ -20,7 +20,7 @@ API_KEY=your-secure-api-key-here
 
 ## Environment Variables Explained
 
-### `NEXT_PUBLIC_BACKEND_API_URL`
+### `API_URL`
 
 **Purpose**: The base URL of your backend API server
 
@@ -66,7 +66,7 @@ openssl rand -hex 32
 
 The application uses these environment variables to:
 
-1. **Connect to the backend API** - All API requests use `NEXT_PUBLIC_BACKEND_API_URL` as the base URL
+1. **Connect to the backend API** - All API requests use `API_URL` as the base URL
 
 2. **Authenticate requests** - The `API_KEY` is used in Next.js Server Actions to authenticate API calls:
    - `/lib/actions/schools.ts` - Server actions for schools and construction projects
@@ -98,7 +98,7 @@ The application uses these environment variables to:
 
 **Solution**: 
 - Verify the backend server is running
-- Check that `NEXT_PUBLIC_BACKEND_API_URL` matches your backend's address and port
+- Check that `API_URL` matches your backend's address and port
 
 ### "401 Unauthorized" errors
 
@@ -132,7 +132,7 @@ For production deployments (e.g., Vercel, Netlify):
 1. Go to your project settings
 2. Navigate to "Environment Variables"
 3. Add:
-   - `NEXT_PUBLIC_BACKEND_API_URL` = `https://your-api-domain.com`
+   - `API_URL` = `https://your-api-domain.com`
    - `API_KEY` = `your-production-api-key` (without NEXT_PUBLIC prefix for security)
 4. Redeploy the application
 

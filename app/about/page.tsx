@@ -24,7 +24,7 @@ export default function AboutPage() {
                 <h2 className="text-2xl font-bold text-foreground">About Me</h2>
               </div>
               <p className="text-base text-default-700 leading-relaxed">
-                I'm a software engineer based in Berlin and a dad who has
+                I&apos;m a software engineer based in Berlin and a dad who has
                 experienced firsthand how challenging it can be to search for
                 the right school. The process of gathering information from
                 multiple sources and comparing options inspired me to create
@@ -80,10 +80,10 @@ export default function AboutPage() {
                     Data portal.
                   </p>
                   <Link
-                    href="https://daten.berlin.de/datensaetze/schulen-in-berlin-1096779"
                     isExternal
                     showAnchorIcon
                     className="text-primary"
+                    href="https://daten.berlin.de/datensaetze/schulen-in-berlin-1096779"
                   >
                     Berlin Open Data - Schools Dataset
                   </Link>
@@ -99,10 +99,10 @@ export default function AboutPage() {
                     from the Berlin Education Authority.
                   </p>
                   <Link
-                    href="https://www.bildung.berlin.de/Schulverzeichnis/SchulListe.aspx?IDKategorie=45&IDAngebot=336&Sort=BSN&TextID=35"
                     isExternal
                     showAnchorIcon
                     className="text-primary"
+                    href="https://www.bildung.berlin.de/Schulverzeichnis/SchulListe.aspx?IDKategorie=45&IDAngebot=336&Sort=BSN&TextID=35"
                   >
                     Berlin Education Authority - School Directory
                   </Link>
@@ -117,10 +117,10 @@ export default function AboutPage() {
                     sourced from the Berlin Geodata Infrastructure (GDI).
                   </p>
                   <Link
-                    href="https://gdi.berlin.de/geonetwork/srv/api/records/ddb39227-00df-380a-9d00-6f919a721d4f"
                     isExternal
                     showAnchorIcon
                     className="text-primary"
+                    href="https://gdi.berlin.de/geonetwork/srv/api/records/ddb39227-00df-380a-9d00-6f919a721d4f"
                   >
                     Berlin GDI - Schools Geodata
                   </Link>
@@ -135,10 +135,10 @@ export default function AboutPage() {
                     and renovation projects.
                   </p>
                   <Link
-                    href="https://daten.berlin.de/datensaetze/simple_search_wwwberlindesenbildungschulebauenundsanierenschulbaukarte"
                     isExternal
                     showAnchorIcon
                     className="text-primary"
+                    href="https://daten.berlin.de/datensaetze/simple_search_wwwberlindesenbildungschulebauenundsanierenschulbaukarte"
                   >
                     Berlin Open Data - School Construction Map
                   </Link>
@@ -151,3 +151,5 @@ export default function AboutPage() {
     </div>
   );
 }
+
+export const revalidate = 604800; // 7 days

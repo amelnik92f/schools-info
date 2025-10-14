@@ -1,6 +1,7 @@
 "use client";
 
 import { Chip } from "@heroui/chip";
+
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 
 interface TagsSectionProps {
@@ -8,7 +9,12 @@ interface TagsSectionProps {
 }
 
 export function TagsSection({ schoolId }: TagsSectionProps) {
-  const { tags, isLoaded: tagsLoaded, toggleTagOnSchool, schoolHasTag } = useSchoolTagsStore();
+  const {
+    tags,
+    isLoaded: tagsLoaded,
+    toggleTagOnSchool,
+    schoolHasTag,
+  } = useSchoolTagsStore();
 
   if (!tagsLoaded) {
     return null;
@@ -22,17 +28,18 @@ export function TagsSection({ schoolId }: TagsSectionProps) {
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => {
           const isActive = schoolHasTag(schoolId, tag.id);
+
           return (
             <Chip
               key={tag.id}
               size="sm"
-              variant={isActive ? "solid" : "bordered"}
               style={{
                 backgroundColor: isActive ? tag.color : "transparent",
                 borderColor: tag.color,
                 color: isActive ? "#fff" : tag.color,
                 cursor: "pointer",
               }}
+              variant={isActive ? "solid" : "bordered"}
               onClick={() => toggleTagOnSchool(schoolId, tag.id)}
             >
               {isActive ? "✓ " : ""}
@@ -44,4 +51,3 @@ export function TagsSection({ schoolId }: TagsSectionProps) {
     </div>
   );
 }
-

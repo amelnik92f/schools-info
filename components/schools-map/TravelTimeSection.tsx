@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Divider } from "@heroui/divider";
 import { Spinner } from "@heroui/spinner";
+
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 import { useTravelTimeStore } from "@/lib/store/travel-time-store";
 import { TRAVEL_MODES } from "@/lib/utils/formatDuration";
@@ -47,6 +48,7 @@ export function TravelTimeSection({
 
       // Check if already cached
       const cached = getTravelTimes(homeCoordinates, schoolCoordinates);
+
       if (cached) {
         return; // Already have data
       }
@@ -77,7 +79,7 @@ export function TravelTimeSection({
           <span className="text-sm font-semibold text-foreground">
             🚀 Travel Time
           </span>
-          {isLoadingTravelTimes && <Spinner size="sm" color="primary" />}
+          {isLoadingTravelTimes && <Spinner color="primary" size="sm" />}
         </div>
 
         <div className="grid grid-cols-3 gap-2">

@@ -7,6 +7,7 @@
  */
 
 import { unstable_cache } from "next/cache";
+
 import { getApiHeaders } from "@/lib/api";
 
 const API_BASE_URL =
@@ -73,4 +74,3 @@ export async function fetchAISummary(
     );
   }
 }
-

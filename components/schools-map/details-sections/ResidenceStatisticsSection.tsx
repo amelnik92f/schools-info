@@ -1,9 +1,9 @@
 "use client";
 
-import { ResidenceStat } from "@/types";
+import { SchoolResidenceStat } from "@/types";
 
 interface ResidenceStatisticsSectionProps {
-  residenceStats: ResidenceStat[];
+  residenceStats: SchoolResidenceStat[];
 }
 
 export function ResidenceStatisticsSection({
@@ -26,7 +26,7 @@ export function ResidenceStatisticsSection({
           .map((stat, index) => {
             const totalStudents = residenceStats.reduce(
               (sum, s) => sum + s.student_count,
-              0
+              0,
             );
             const percentage =
               totalStudents > 0
@@ -65,4 +65,3 @@ export function ResidenceStatisticsSection({
     </div>
   );
 }
-

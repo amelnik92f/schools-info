@@ -28,4 +28,3 @@ export async function fetchStandaloneConstructionProjects(): Promise<
 > {
   return apiFetchStandaloneConstructionProjects();
 }
-

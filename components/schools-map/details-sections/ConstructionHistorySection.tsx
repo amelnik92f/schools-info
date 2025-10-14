@@ -1,8 +1,10 @@
 "use client";
 
 import { Chip } from "@heroui/chip";
-import { ConstructionProject } from "@/types";
+
 import { getProjectStatus, getStatusColor, getStatusLabel } from "../utils";
+
+import { ConstructionProject } from "@/types";
 
 interface ConstructionHistorySectionProps {
   constructionProjects: ConstructionProject[];
@@ -26,6 +28,7 @@ export function ConstructionHistorySection({
         {constructionProjects.map((project) => {
           // Convert to frontend format for getProjectStatus
           const statusInfo = getProjectStatus(project);
+
           return (
             <div key={project.id} className="p-2 rounded-lg bg-content2">
               <div className="flex items-start justify-between gap-2 mb-1">
@@ -33,10 +36,10 @@ export function ConstructionHistorySection({
                   {project.construction_measure}
                 </span>
                 <Chip
+                  className="h-5"
+                  color={getStatusColor(statusInfo.status)}
                   size="sm"
                   variant="flat"
-                  color={getStatusColor(statusInfo.status)}
-                  className="h-5"
                 >
                   {getStatusLabel(statusInfo)}
                 </Chip>
@@ -58,4 +61,3 @@ export function ConstructionHistorySection({
     </div>
   );
 }
-

@@ -1,10 +1,10 @@
 "use client";
 
-import { CitizenshipStat, Statistic } from "@/types";
+import { SchoolCitizenshipStat, SchoolStatistic } from "@/types";
 
 interface CitizenshipStatisticsSectionProps {
-  citizenshipStats: CitizenshipStat[];
-  stats?: Statistic | null;
+  citizenshipStats: SchoolCitizenshipStat[];
+  stats?: SchoolStatistic | null;
 }
 
 export function CitizenshipStatisticsSection({
@@ -17,10 +17,10 @@ export function CitizenshipStatisticsSection({
 
   // Separate "Insgesamt" (total) from regional breakdown
   const totalRow = citizenshipStats.find(
-    (stat) => stat.citizenship.toLowerCase() === "insgesamt"
+    (stat) => stat.citizenship.toLowerCase() === "insgesamt",
   );
   const regionalStats = citizenshipStats.filter(
-    (stat) => stat.citizenship.toLowerCase() !== "insgesamt"
+    (stat) => stat.citizenship.toLowerCase() !== "insgesamt",
   );
 
   return (
@@ -38,7 +38,9 @@ export function CitizenshipStatisticsSection({
             <span className="text-sm font-bold text-foreground">
               Total Non-German Students
             </span>
-            <span className="text-lg font-bold text-primary">{totalRow.total}</span>
+            <span className="text-lg font-bold text-primary">
+              {totalRow.total}
+            </span>
           </div>
           <div className="flex items-center justify-between text-xs text-default-700 mb-2">
             <div className="flex gap-3">
@@ -47,8 +49,8 @@ export function CitizenshipStatisticsSection({
             </div>
             {stats && Number(stats.students) > 0 && (
               <span className="font-semibold text-primary">
-                {((totalRow.total / Number(stats.students)) * 100).toFixed(1)}% of
-                all students
+                {((totalRow.total / Number(stats.students)) * 100).toFixed(1)}%
+                of all students
               </span>
             )}
           </div>
@@ -120,4 +122,3 @@ export function CitizenshipStatisticsSection({
     </div>
   );
 }
-

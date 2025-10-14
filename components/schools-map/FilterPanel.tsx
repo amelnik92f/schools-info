@@ -7,11 +7,13 @@ import { Checkbox } from "@heroui/checkbox";
 import { Divider } from "@heroui/divider";
 import { Chip } from "@heroui/chip";
 import { MapRef } from "react-map-gl/maplibre";
+
+import { getMarkerColor } from "./utils";
+
 import { EnrichedSchool, ConstructionProject } from "@/types";
 import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
-import { getMarkerColor } from "./utils";
 
 interface FilterPanelProps {
   schools: EnrichedSchool[];
@@ -109,8 +111,10 @@ export function FilterPanel({
           name.toLowerCase().includes(query) ||
           street.toLowerCase().includes(query) ||
           district.toLowerCase().includes(query);
+
         if (!matchesSearch) return false;
       }
+
       return filterFn(item);
     }).length;
   };
@@ -126,13 +130,14 @@ export function FilterPanel({
             </span>
             <div className="flex items-center gap-1">
               <Button
-                size="sm"
-                variant={hasLocation("home") ? "solid" : "bordered"}
                 color={isSettingLocation === "home" ? "primary" : "default"}
+                size="sm"
                 startContent={<span className="text-base">🏠</span>}
+                variant={hasLocation("home") ? "solid" : "bordered"}
                 onPress={() => {
                   if (hasLocation("home")) {
                     const loc = locations.home;
+
                     if (loc && mapRef.current) {
                       mapRef.current.flyTo({
                         center: loc.coordinates,
@@ -155,10 +160,10 @@ export function FilterPanel({
               </Button>
               {hasLocation("home") && (
                 <Button
+                  isIconOnly
+                  color="danger"
                   size="sm"
                   variant="light"
-                  color="danger"
-                  isIconOnly
                   onPress={() => removeLocation("home")}
                 >
                   ✕
@@ -167,13 +172,14 @@ export function FilterPanel({
             </div>
             <div className="flex items-center gap-1">
               <Button
-                size="sm"
-                variant={hasLocation("work") ? "solid" : "bordered"}
                 color={isSettingLocation === "work" ? "primary" : "default"}
+                size="sm"
                 startContent={<span className="text-base">💼</span>}
+                variant={hasLocation("work") ? "solid" : "bordered"}
                 onPress={() => {
                   if (hasLocation("work")) {
                     const loc = locations.work;
+
                     if (loc && mapRef.current) {
                       mapRef.current.flyTo({
                         center: loc.coordinates,
@@ -196,10 +202,10 @@ export function FilterPanel({
               </Button>
               {hasLocation("work") && (
                 <Button
+                  isIconOnly
+                  color="danger"
                   size="sm"
                   variant="light"
-                  color="danger"
-                  isIconOnly
                   onPress={() => removeLocation("work")}
                 >
                   ✕
@@ -210,20 +216,20 @@ export function FilterPanel({
         )}
         <div className="flex items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <Chip size="sm" variant="flat" color="primary">
+            <Chip color="primary" size="sm" variant="flat">
               {filteredItemsCount} / {allItems.length} schools
             </Chip>
             {standaloneProjects.length > 0 && (
-              <Chip size="sm" variant="flat" color="warning">
+              <Chip color="warning" size="sm" variant="flat">
                 🏗️ {standaloneProjects.length} projects
               </Chip>
             )}
           </div>
           {hasActiveFilters() && (
             <Button
+              color="danger"
               size="sm"
               variant="flat"
-              color="danger"
               onPress={clearAllFilters}
             >
               Clear All
@@ -233,14 +239,14 @@ export function FilterPanel({
 
         {/* Search Input */}
         <Input
-          placeholder="Search by school name, street, or district..."
-          value={searchQuery}
-          onValueChange={setSearchQuery}
           isClearable
-          startContent={<span className="text-default-400 text-lg">🔎</span>}
           classNames={{
             input: "text-sm",
           }}
+          placeholder="Search by school name, street, or district..."
+          startContent={<span className="text-default-400 text-lg">🔎</span>}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
         />
 
         <div className="mt-4 space-y-4">
@@ -282,18 +288,20 @@ export function FilterPanel({
                   )
                     return false;
                   if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+
                   return schoolType === type;
                 });
+
                 return (
                   <Checkbox
                     key={type}
-                    size="sm"
-                    isSelected={selectedSchoolTypes.has(type)}
-                    onValueChange={() => toggleSchoolType(type)}
                     classNames={{
                       wrapper: "min-w-0",
                       label: "w-full min-w-0",
                     }}
+                    isSelected={selectedSchoolTypes.has(type)}
+                    size="sm"
+                    onValueChange={() => toggleSchoolType(type)}
                   >
                     <div className="flex items-center gap-2 min-w-0 w-full">
                       <div
@@ -348,13 +356,15 @@ export function FilterPanel({
                   )
                     return false;
                   if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+
                   return operator === carrier;
                 });
+
                 return (
                   <Checkbox
                     key={carrier}
-                    size="sm"
                     isSelected={selectedCarriers.has(carrier)}
+                    size="sm"
                     onValueChange={() => toggleCarrier(carrier)}
                   >
                     <span className="text-xs text-default-700">
@@ -405,18 +415,20 @@ export function FilterPanel({
                   )
                     return false;
                   if (showAfter4thGradeOnly && !acceptsAfter4th) return false;
+
                   return itemDistrict === district;
                 });
+
                 return (
                   <Checkbox
                     key={district}
-                    size="sm"
-                    isSelected={selectedDistricts.has(district)}
-                    onValueChange={() => toggleDistrict(district)}
                     classNames={{
                       wrapper: "min-w-0",
                       label: "w-full min-w-0",
                     }}
+                    isSelected={selectedDistricts.has(district)}
+                    size="sm"
+                    onValueChange={() => toggleDistrict(district)}
                   >
                     <span className="text-xs text-default-700 truncate block">
                       {district} ({count})
@@ -439,6 +451,7 @@ export function FilterPanel({
                   {tags.map((tag) => {
                     const count = countItemsWithFilter((item) => {
                       const isSchool = "school" in item;
+
                       if (!isSchool) return false; // Tags only apply to schools
 
                       const school = (item as EnrichedSchool).school;
@@ -466,6 +479,7 @@ export function FilterPanel({
                         return false;
                       if (showAfter4thGradeOnly && !acceptsAfter4th)
                         return false;
+
                       return schoolHasTag(
                         `schulen.${school.school_number}`,
                         tag.id,
@@ -476,7 +490,6 @@ export function FilterPanel({
                       <Chip
                         key={tag.id}
                         size="sm"
-                        variant={selectedTags.has(tag.id) ? "solid" : "flat"}
                         style={{
                           backgroundColor: selectedTags.has(tag.id)
                             ? tag.color
@@ -484,6 +497,7 @@ export function FilterPanel({
                           color: selectedTags.has(tag.id) ? "#fff" : tag.color,
                           cursor: "pointer",
                         }}
+                        variant={selectedTags.has(tag.id) ? "solid" : "flat"}
                         onClick={() => toggleTag(tag.id)}
                       >
                         {tag.name} ({count})
@@ -502,8 +516,8 @@ export function FilterPanel({
               Special Programs
             </h3>
             <Checkbox
-              size="sm"
               isSelected={showAfter4thGradeOnly}
+              size="sm"
               onValueChange={setShowAfter4thGradeOnly}
             >
               <div className="flex items-center gap-2">
@@ -552,8 +566,10 @@ export function FilterPanel({
                       const hasAnySelectedTag = Array.from(selectedTags).some(
                         (tagId) => schoolTagIds.includes(tagId),
                       );
+
                       if (!hasAnySelectedTag) return false;
                     }
+
                     return acceptsAfter4th;
                   })}
                   )

@@ -1,10 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  EnrichedSchool,
-  ConstructionProject,
-  LocationType,
-} from "@/types";
+
+import { EnrichedSchool, ConstructionProject, LocationType } from "@/types";
 
 interface SchoolsMapState {
   // Selected school or construction project state
@@ -86,11 +83,13 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       toggleSchoolType: (type) =>
         set((state) => {
           const newSet = new Set(state.selectedSchoolTypes);
+
           if (newSet.has(type)) {
             newSet.delete(type);
           } else {
             newSet.add(type);
           }
+
           return { selectedSchoolTypes: newSet };
         }),
 
@@ -99,11 +98,13 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       toggleCarrier: (carrier) =>
         set((state) => {
           const newSet = new Set(state.selectedCarriers);
+
           if (newSet.has(carrier)) {
             newSet.delete(carrier);
           } else {
             newSet.add(carrier);
           }
+
           return { selectedCarriers: newSet };
         }),
 
@@ -113,11 +114,13 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       toggleDistrict: (district) =>
         set((state) => {
           const newSet = new Set(state.selectedDistricts);
+
           if (newSet.has(district)) {
             newSet.delete(district);
           } else {
             newSet.add(district);
           }
+
           return { selectedDistricts: newSet };
         }),
 
@@ -126,11 +129,13 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       toggleTag: (tagId) =>
         set((state) => {
           const newSet = new Set(state.selectedTags);
+
           if (newSet.has(tagId)) {
             newSet.delete(tagId);
           } else {
             newSet.add(tagId);
           }
+
           return { selectedTags: newSet };
         }),
 
@@ -159,6 +164,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
 
       hasActiveFilters: () => {
         const state = get();
+
         return (
           state.searchQuery !== "" ||
           state.selectedSchoolTypes.size > 0 ||
@@ -175,8 +181,10 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
+
           if (!str) return null;
           const { state } = JSON.parse(str);
+
           return {
             state: {
               ...state,
@@ -200,6 +208,7 @@ export const useSchoolsMapStore = create<SchoolsMapState>()(
               selectedTags: Array.from(state.selectedTags),
             },
           };
+
           localStorage.setItem(name, JSON.stringify(serialized));
         },
         removeItem: (name) => localStorage.removeItem(name),

@@ -1,5 +1,6 @@
 import { Popup } from "react-map-gl/maplibre";
 import { Button } from "@heroui/button";
+
 import { LocationType } from "@/types";
 
 interface CustomLocationPopupProps {
@@ -20,14 +21,14 @@ export function CustomLocationPopup({
 
   return (
     <Popup
-      longitude={coordinates[0]}
-      latitude={coordinates[1]}
       anchor="top"
-      offset={20}
-      onClose={onClose}
       closeButton={true}
       closeOnClick={false}
+      latitude={coordinates[1]}
+      longitude={coordinates[0]}
       maxWidth="300px"
+      offset={20}
+      onClose={onClose}
     >
       <div className="p-3 min-w-[200px]">
         <div className="flex items-center gap-2 mb-3">
@@ -37,10 +38,10 @@ export function CustomLocationPopup({
         <div className="space-y-2">
           <p className="text-sm text-default-700">📍 Location saved</p>
           <Button
-            size="sm"
-            color="danger"
-            variant="flat"
             fullWidth
+            color="danger"
+            size="sm"
+            variant="flat"
             onPress={() => {
               onRemove(type);
               onClose();

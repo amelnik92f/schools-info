@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { fetchAISummary } from "@/lib/actions/ai-summary";
 
 interface AISummary {
@@ -48,6 +49,7 @@ export const useAISummaryStore = create<AISummaryState>()(
 
       getSummary: (bsn) => {
         const summaryData = get().summaries[bsn];
+
         return summaryData?.summary || null;
       },
 
@@ -70,7 +72,9 @@ export const useAISummaryStore = create<AISummaryState>()(
       removeSummary: (bsn) => {
         set((state) => {
           const newSummaries = { ...state.summaries };
+
           delete newSummaries[bsn];
+
           return { summaries: newSummaries };
         });
       },
@@ -108,7 +112,9 @@ export const useAISummaryStore = create<AISummaryState>()(
       clearError: (bsn) => {
         set((state) => {
           const newErrorStates = { ...state.errorStates };
+
           delete newErrorStates[bsn];
+
           return { errorStates: newErrorStates };
         });
       },

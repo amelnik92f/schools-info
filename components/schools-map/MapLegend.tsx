@@ -1,4 +1,5 @@
 import { Divider } from "@heroui/divider";
+
 import { SCHOOL_TYPE_COLORS, CONSTRUCTION_STRIPE_COLOR } from "./utils";
 
 export function MapLegend() {

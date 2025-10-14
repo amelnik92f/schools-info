@@ -1,12 +1,14 @@
 "use client";
 
 import { Link } from "@heroui/link";
+
 import { EnrichedSchool, ConstructionProject } from "@/types";
 
 function createGoogleEarthLink(latitude: number, longitude: number): string {
   const fixedUrlEnd =
     ",65.01509008a,464.25589089d,35y,264.46221151h,60t,0r/data=CgRCAggBKAJCAggASg0I____________ARAA";
   const fullUrl = `https://earth.google.com/web/@${latitude},${longitude}${fixedUrlEnd}`;
+
   return fullUrl;
 }
 
@@ -19,13 +21,16 @@ export function ContactSection({ item }: ContactSectionProps) {
   const isStandaloneProject = !isSchool;
 
   const enrichedSchool = isSchool ? (item as EnrichedSchool) : null;
-  const standaloneProject = isStandaloneProject ? (item as ConstructionProject) : null;
+  const standaloneProject = isStandaloneProject
+    ? (item as ConstructionProject)
+    : null;
 
   const school = enrichedSchool?.school || null;
 
   const street = school?.street || standaloneProject?.street || "";
   const houseNumber = school?.house_number || "";
-  const postalCode = school?.postal_code || standaloneProject?.postal_code || "";
+  const postalCode =
+    school?.postal_code || standaloneProject?.postal_code || "";
   const latitude = school?.latitude || standaloneProject?.latitude || 0;
   const longitude = school?.longitude || standaloneProject?.longitude || 0;
   const website = school?.website || "";
@@ -33,7 +38,8 @@ export function ContactSection({ item }: ContactSectionProps) {
   const email = school?.email || "";
   const district = school?.district || standaloneProject?.district || "";
   const city = standaloneProject?.city || "Berlin";
-  const schoolType = school?.school_category || standaloneProject?.school_type || "";
+  const schoolType =
+    school?.school_category || standaloneProject?.school_type || "";
 
   // For standalone projects, show construction details
   if (isStandaloneProject && standaloneProject) {
@@ -54,25 +60,33 @@ export function ContactSection({ item }: ContactSectionProps) {
         </div>
 
         <div>
-          <span className="font-semibold text-foreground">🔨 Construction Type:</span>
+          <span className="font-semibold text-foreground">
+            🔨 Construction Type:
+          </span>
           <p className="mt-1">{standaloneProject.construction_measure}</p>
         </div>
 
         <div>
           <span className="font-semibold text-foreground">📝 Description:</span>
-          <p className="mt-1 leading-relaxed">{standaloneProject.description}</p>
+          <p className="mt-1 leading-relaxed">
+            {standaloneProject.description}
+          </p>
         </div>
 
         {standaloneProject.handover_date && (
           <div>
-            <span className="font-semibold text-foreground">📅 Expected Completion:</span>
+            <span className="font-semibold text-foreground">
+              📅 Expected Completion:
+            </span>
             <p className="mt-1">{standaloneProject.handover_date}</p>
           </div>
         )}
 
         {standaloneProject.total_costs && (
           <div>
-            <span className="font-semibold text-foreground">💰 Total Cost:</span>
+            <span className="font-semibold text-foreground">
+              💰 Total Cost:
+            </span>
             <p className="mt-1">{standaloneProject.total_costs}</p>
           </div>
         )}
@@ -81,10 +95,10 @@ export function ContactSection({ item }: ContactSectionProps) {
           <span className="font-semibold text-foreground">🌍 Location:</span>
           <div className="mt-1">
             <Link
-              href={createGoogleEarthLink(latitude, longitude)}
               isExternal
-              size="sm"
               className="text-primary"
+              href={createGoogleEarthLink(latitude, longitude)}
+              size="sm"
             >
               View on Google Earth
             </Link>
@@ -98,7 +112,9 @@ export function ContactSection({ item }: ContactSectionProps) {
               📊 Capacity After Construction:
             </span>
             {standaloneProject.places_after_construction !== "k.A." && (
-              <p className="mt-1">Places: {standaloneProject.places_after_construction}</p>
+              <p className="mt-1">
+                Places: {standaloneProject.places_after_construction}
+              </p>
             )}
             {standaloneProject.class_tracks_after_construction !== "k.A." && (
               <p className="mt-1">
@@ -133,7 +149,7 @@ export function ContactSection({ item }: ContactSectionProps) {
       {email && (
         <div className="flex items-center gap-2">
           <span className="text-base">✉️</span>
-          <Link href={`mailto:${email}`} size="sm" className="text-primary">
+          <Link className="text-primary" href={`mailto:${email}`} size="sm">
             {email}
           </Link>
         </div>
@@ -142,7 +158,12 @@ export function ContactSection({ item }: ContactSectionProps) {
       {website && (
         <div className="flex items-center gap-2">
           <span className="text-base">🌐</span>
-          <Link href={website} isExternal size="sm" className="text-primary break-all">
+          <Link
+            isExternal
+            className="text-primary break-all"
+            href={website}
+            size="sm"
+          >
             {website}
           </Link>
         </div>
@@ -151,10 +172,10 @@ export function ContactSection({ item }: ContactSectionProps) {
       <div className="flex items-center gap-2">
         <span className="text-base">🌍</span>
         <Link
-          href={createGoogleEarthLink(latitude, longitude)}
           isExternal
-          size="sm"
           className="text-primary"
+          href={createGoogleEarthLink(latitude, longitude)}
+          size="sm"
         >
           View on Google Earth
         </Link>
@@ -162,4 +183,3 @@ export function ContactSection({ item }: ContactSectionProps) {
     </div>
   );
 }
-

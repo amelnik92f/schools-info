@@ -1,4 +1,5 @@
 import { Marker } from "react-map-gl/maplibre";
+
 import { LocationType } from "@/types";
 
 interface CustomLocationMarkerProps {
@@ -16,9 +17,9 @@ export function CustomLocationMarker({
 
   return (
     <Marker
-      longitude={coordinates[0]}
-      latitude={coordinates[1]}
       anchor="bottom"
+      latitude={coordinates[1]}
+      longitude={coordinates[0]}
       onClick={(e) => {
         e.originalEvent.stopPropagation();
         onClick(type);

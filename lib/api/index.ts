@@ -40,7 +40,7 @@ export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]> {
       headers: getApiHeaders(),
       // Add cache control for Next.js
       next: {
-        revalidate: 3600, // Revalidate every hour
+        revalidate: 604800, // Revalidate every week
       },
     });
 
@@ -74,7 +74,7 @@ export async function fetchStandaloneConstructionProjects(): Promise<
       headers: getApiHeaders(),
       // Add cache control for Next.js
       next: {
-        revalidate: 3600, // Revalidate every hour
+        revalidate: 604800, // Revalidate every week
       },
     });
 

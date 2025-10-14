@@ -54,12 +54,12 @@ export const SparklesIcon = ({
 }: IconSvgProps) => (
   <svg
     aria-hidden="true"
+    fill="none"
     focusable="false"
     height={size || height}
     role="presentation"
     viewBox="0 0 24 24"
     width={size || width}
-    fill="none"
     {...props}
   >
     <path
@@ -69,8 +69,8 @@ export const SparklesIcon = ({
     <path
       d="M20 3v4m-2-2h4"
       stroke="currentColor"
-      strokeWidth="1.5"
       strokeLinecap="round"
+      strokeWidth="1.5"
     />
   </svg>
 );

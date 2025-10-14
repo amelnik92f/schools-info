@@ -12,7 +12,6 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 
-
 /**
  * Calculate travel times from one location to another
  * @param fromCoords - [longitude, latitude]
@@ -66,6 +65,7 @@ export async function calculateTravelTimes(
     });
   } catch (error) {
     console.error("Error calculating travel times:", error);
+
     // Return empty results on error
     return TRAVEL_MODES.map((modeInfo) => ({
       ...modeInfo,

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { CustomLocation, LocationType } from "@/types";
 
 interface CustomLocationsState {
@@ -35,6 +36,7 @@ export const useCustomLocationsStore = create<CustomLocationsState>()(
           coordinates,
           label,
         };
+
         set((state) => ({
           locations: {
             ...state.locations,

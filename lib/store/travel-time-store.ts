@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import {
-  calculateTravelTimes
-} from "@/lib/actions/travel-time";
+
+import { calculateTravelTimes } from "@/lib/actions/travel-time";
 import { TravelTime } from "@/lib/utils/formatDuration";
 
 // Generate a unique key for caching based on coordinates
@@ -71,13 +70,17 @@ export const useTravelTimeStore = create<TravelTimeState>()(
 
         // Check if cache is still valid (not expired)
         const now = Date.now();
+
         if (now - cached.timestamp > CACHE_EXPIRY_MS) {
           // Cache expired, remove it
           set((state) => {
             const newCache = { ...state.cache };
+
             delete newCache[key];
+
             return { cache: newCache };
           });
+
           return null;
         }
 
@@ -89,6 +92,7 @@ export const useTravelTimeStore = create<TravelTimeState>()(
 
         // Check if already cached
         const cached = get().getTravelTimes(fromCoords, toCoords);
+
         if (cached) {
           return cached;
         }
@@ -99,6 +103,7 @@ export const useTravelTimeStore = create<TravelTimeState>()(
           return new Promise((resolve) => {
             const checkInterval = setInterval(() => {
               const result = get().getTravelTimes(fromCoords, toCoords);
+
               if (result) {
                 clearInterval(checkInterval);
                 resolve(result);
@@ -141,6 +146,7 @@ export const useTravelTimeStore = create<TravelTimeState>()(
 
       isLoading: (fromCoords, toCoords) => {
         const key = generateCacheKey(fromCoords, toCoords);
+
         return get().loadingStates[key] || false;
       },
 
@@ -150,6 +156,7 @@ export const useTravelTimeStore = create<TravelTimeState>()(
 
       clearOldCache: () => {
         const now = Date.now();
+
         set((state) => {
           const newCache: Record<string, CachedTravelTime> = {};
 

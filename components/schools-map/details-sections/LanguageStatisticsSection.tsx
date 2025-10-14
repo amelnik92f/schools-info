@@ -1,9 +1,9 @@
 "use client";
 
-import { LanguageStat } from "@/types";
+import { SchoolLanguageStat } from "@/types";
 
 interface LanguageStatisticsSectionProps {
-  languageStat: LanguageStat;
+  languageStat: SchoolLanguageStat;
 }
 
 export function LanguageStatisticsSection({
@@ -68,4 +68,3 @@ export function LanguageStatisticsSection({
     </div>
   );
 }
-

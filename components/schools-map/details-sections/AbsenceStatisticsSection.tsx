@@ -1,9 +1,9 @@
 "use client";
 
-import { AbsenceStat } from "@/types";
+import { SchoolAbsenceStat } from "@/types";
 
 interface AbsenceStatisticsSectionProps {
-  absenceStat: AbsenceStat;
+  absenceStat: SchoolAbsenceStat;
 }
 
 export function AbsenceStatisticsSection({
@@ -174,4 +174,3 @@ export function AbsenceStatisticsSection({
     </div>
   );
 }
-

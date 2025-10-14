@@ -9,4 +9,3 @@ export { LanguageStatisticsSection } from "./LanguageStatisticsSection";
 export { AbsenceStatisticsSection } from "./AbsenceStatisticsSection";
 export { ConstructionHistorySection } from "./ConstructionHistorySection";
 export { TagsSection } from "./TagsSection";
-

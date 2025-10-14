@@ -1,6 +1,8 @@
 import { Marker } from "react-map-gl/maplibre";
-import { EnrichedSchool, ConstructionProject } from "@/types";
+
 import { getMarkerColor, CONSTRUCTION_STRIPE_COLOR } from "./utils";
+
+import { EnrichedSchool, ConstructionProject } from "@/types";
 import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
 
 interface SchoolMarkerProps {
@@ -32,9 +34,9 @@ export function SchoolMarker({ item, isSelected, onClick }: SchoolMarkerProps) {
 
   return (
     <Marker
-      longitude={lng}
-      latitude={lat}
       anchor="bottom"
+      latitude={lat}
+      longitude={lng}
       onClick={(e) => {
         e.originalEvent.stopPropagation();
         onClick(item);

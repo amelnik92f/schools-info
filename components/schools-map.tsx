@@ -8,19 +8,17 @@ import MapGL, {
   MapRef,
 } from "react-map-gl/maplibre";
 import clsx from "clsx";
-import {
-  EnrichedSchool,
-  ConstructionProject,
-  LocationType,
-} from "@/types";
-import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
-import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
-import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
+
 import { FilterPanel } from "./schools-map/FilterPanel";
 import { SchoolMarker } from "./schools-map/SchoolMarker";
 import { SchoolDetailsPanel } from "./schools-map/SchoolDetailsPanel";
 import { CustomLocationMarker } from "./schools-map/CustomLocationMarker";
 import { CustomLocationPopup } from "./schools-map/CustomLocationPopup";
+
+import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
+import { useSchoolTagsStore } from "@/lib/store/school-tags-store";
+import { useSchoolsMapStore } from "@/lib/store/schools-map-store";
+import { EnrichedSchool, ConstructionProject, LocationType } from "@/types";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface SchoolsMapProps {
@@ -93,6 +91,7 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
           name.toLowerCase().includes(query) ||
           street.toLowerCase().includes(query) ||
           district.toLowerCase().includes(query);
+
         if (!matchesSearch) return false;
       }
 
@@ -123,6 +122,7 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
         const hasAnySelectedTag = Array.from(selectedTags).some((tagId) =>
           schoolTagIds.includes(tagId),
         );
+
         if (!hasAnySelectedTag) return false;
       }
 
@@ -163,6 +163,7 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
     (event: any) => {
       if (isSettingLocation) {
         const { lngLat } = event;
+
         setLocation(isSettingLocation, [lngLat.lng, lngLat.lat]);
         setIsSettingLocation(null);
       }
@@ -208,9 +209,9 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
             </div>
             {/* Close button - only on mobile */}
             <button
+              aria-label="Close filters"
               className="md:hidden p-2 rounded-lg hover:bg-default-100 transition-colors"
               onClick={() => setShowFilters(false)}
-              aria-label="Close filters"
             >
               <span className="text-xl">✕</span>
             </button>
@@ -220,10 +221,10 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
         {/* Filter Panel - scrollable */}
         <div className="flex-1 overflow-y-auto">
           <FilterPanel
-            schools={schools}
-            standaloneProjects={standaloneProjects}
             filteredItemsCount={filteredItems.length}
             mapRef={mapRef}
+            schools={schools}
+            standaloneProjects={standaloneProjects}
           />
         </div>
       </div>
@@ -248,21 +249,21 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
       <div className="flex-1 relative">
         {/* Mobile Filter Toggle Button */}
         <button
+          aria-label="Open filters"
           className="md:hidden absolute top-4 left-4 z-20 p-3 rounded-lg bg-content1 shadow-lg border border-divider hover:bg-content2 transition-colors"
           onClick={() => setShowFilters(true)}
-          aria-label="Open filters"
         >
           <span className="text-xl">☰</span>
         </button>
         <MapGL
           ref={mapRef}
           {...viewState}
-          onMove={(evt) => setViewState(evt.viewState)}
-          onClick={handleMapClick}
-          style={{ width: "100%", height: "100%" }}
-          mapStyle={mapStyle}
           attributionControl={{ compact: true }}
           cursor={isSettingLocation ? "crosshair" : "grab"}
+          mapStyle={mapStyle}
+          style={{ width: "100%", height: "100%" }}
+          onClick={handleMapClick}
+          onMove={(evt) => setViewState(evt.viewState)}
         >
           {/* Map Controls */}
           <NavigationControl position="top-right" />
@@ -272,16 +273,16 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
           {/* Custom Location Markers */}
           {locationsLoaded && locations.home && (
             <CustomLocationMarker
-              type="home"
               coordinates={locations.home.coordinates}
+              type="home"
               onClick={handleCustomLocationClick}
             />
           )}
 
           {locationsLoaded && locations.work && (
             <CustomLocationMarker
-              type="work"
               coordinates={locations.work.coordinates}
+              type="work"
               onClick={handleCustomLocationClick}
             />
           )}
@@ -290,9 +291,7 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
           {filteredItems.map((item) => {
             const isSchool = "school" in item;
             const school = isSchool ? (item as EnrichedSchool).school : null;
-            const project = !isSchool
-              ? (item as ConstructionProject)
-              : null;
+            const project = !isSchool ? (item as ConstructionProject) : null;
             const id = school
               ? `schulen.${school.school_number}`
               : `construction.${project?.id}`;
@@ -302,13 +301,13 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
             return (
               <SchoolMarker
                 key={id}
-                item={item}
                 isSelected={
                   isSchool
                     ? (selectedSchool as any)?.school?.school_number ===
                       school?.school_number
                     : (selectedSchool as any)?.id === project?.id
                 }
+                item={item}
                 onClick={handleMarkerClick}
               />
             );
@@ -317,8 +316,8 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
           {/* Custom Location Popups */}
           {selectedCustomLocation && locations[selectedCustomLocation] && (
             <CustomLocationPopup
-              type={selectedCustomLocation}
               coordinates={locations[selectedCustomLocation].coordinates}
+              type={selectedCustomLocation}
               onClose={handleCloseCustomLocationPopup}
               onRemove={removeLocation}
             />

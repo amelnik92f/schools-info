@@ -1,9 +1,9 @@
 "use client";
 
-import { Statistic } from "@/types";
+import { SchoolStatistic } from "@/types";
 
 interface StatisticsSectionProps {
-  stats: Statistic;
+  stats: SchoolStatistic;
 }
 
 export function StatisticsSection({ stats }: StatisticsSectionProps) {
@@ -19,7 +19,9 @@ export function StatisticsSection({ stats }: StatisticsSectionProps) {
         <div className="p-3 rounded-lg bg-content2">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-base">👨‍🎓</span>
-            <span className="text-xs font-semibold text-foreground">Students</span>
+            <span className="text-xs font-semibold text-foreground">
+              Students
+            </span>
           </div>
           <div className="space-y-1 text-xs text-default-700">
             <div className="flex justify-between">
@@ -41,7 +43,9 @@ export function StatisticsSection({ stats }: StatisticsSectionProps) {
         <div className="p-3 rounded-lg bg-content2">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-base">👨‍🏫</span>
-            <span className="text-xs font-semibold text-foreground">Teachers</span>
+            <span className="text-xs font-semibold text-foreground">
+              Teachers
+            </span>
           </div>
           <div className="space-y-1 text-xs text-default-700">
             <div className="flex justify-between">
@@ -76,4 +80,3 @@ export function StatisticsSection({ stats }: StatisticsSectionProps) {
     </div>
   );
 }
-

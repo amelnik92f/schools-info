@@ -27,6 +27,7 @@ export const getProjectStatus = (
   }
 
   const years = dateStr.match(/\d{4}/g);
+
   if (years) {
     const completionYear = Math.max(...years.map((y) => parseInt(y)));
 

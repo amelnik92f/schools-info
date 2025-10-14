@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { SchoolTag, SchoolTags } from "@/types";
 
 // Default tags
@@ -45,9 +46,11 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
           name,
           color,
         };
+
         set((state) => ({
           tags: [...state.tags, newTag],
         }));
+
         return newTag;
       },
 
@@ -59,6 +62,7 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
 
           // Remove this tag from all schools
           const updatedSchoolTags = { ...state.schoolTags };
+
           Object.keys(updatedSchoolTags).forEach((schoolId) => {
             updatedSchoolTags[schoolId] = updatedSchoolTags[schoolId].filter(
               (id) => id !== tagId,
@@ -88,9 +92,11 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
       addTagToSchool: (schoolId, tagId) => {
         set((state) => {
           const currentTags = state.schoolTags[schoolId] || [];
+
           if (currentTags.includes(tagId)) {
             return state; // Tag already exists
           }
+
           return {
             schoolTags: {
               ...state.schoolTags,
@@ -108,6 +114,7 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
 
           if (updatedTags.length === 0) {
             const { [schoolId]: _, ...rest } = state.schoolTags;
+
             return { schoolTags: rest };
           }
 
@@ -124,6 +131,7 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
       toggleTagOnSchool: (schoolId, tagId) => {
         const state = get();
         const currentTags = state.schoolTags[schoolId] || [];
+
         if (currentTags.includes(tagId)) {
           state.removeTagFromSchool(schoolId, tagId);
         } else {
@@ -135,6 +143,7 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
       getSchoolTags: (schoolId) => {
         const state = get();
         const tagIds = state.schoolTags[schoolId] || [];
+
         return state.tags.filter((tag) => tagIds.includes(tag.id));
       },
 
@@ -142,6 +151,7 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
       schoolHasTag: (schoolId, tagId) => {
         const state = get();
         const tagIds = state.schoolTags[schoolId] || [];
+
         return tagIds.includes(tagId);
       },
 
@@ -149,9 +159,11 @@ export const useSchoolTagsStore = create<SchoolTagsState>()(
       getUsedTags: () => {
         const state = get();
         const usedTagIds = new Set<string>();
+
         Object.values(state.schoolTags).forEach((tagIds) => {
           tagIds.forEach((id) => usedTagIds.add(id));
         });
+
         return state.tags.filter((tag) => usedTagIds.has(tag.id));
       },
     }),

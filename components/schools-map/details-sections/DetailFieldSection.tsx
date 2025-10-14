@@ -6,7 +6,11 @@ interface DetailFieldSectionProps {
   content: string;
 }
 
-export function DetailFieldSection({ icon, title, content }: DetailFieldSectionProps) {
+export function DetailFieldSection({
+  icon,
+  title,
+  content,
+}: DetailFieldSectionProps) {
   if (!content || !content.trim()) {
     return null;
   }
@@ -26,4 +30,3 @@ export function DetailFieldSection({ icon, title, content }: DetailFieldSectionP
     </div>
   );
 }
-

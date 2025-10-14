@@ -1,8 +1,7 @@
 "use client";
 
 import { Divider } from "@heroui/divider";
-import { EnrichedSchool, ConstructionProject } from "@/types";
-import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
+
 import { TravelTimeSection } from "./TravelTimeSection";
 import {
   SchoolDetailsHeader,
@@ -17,6 +16,9 @@ import {
   ConstructionHistorySection,
   TagsSection,
 } from "./details-sections";
+
+import { EnrichedSchool, ConstructionProject } from "@/types";
+import { useCustomLocationsStore } from "@/lib/store/custom-locations-store";
 
 interface SchoolDetailsPanelProps {
   item: EnrichedSchool | ConstructionProject;
@@ -72,9 +74,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.languages}
                 icon="🌐"
                 title="Languages Offered"
-                content={details.languages}
               />
             </>
           )}
@@ -83,9 +85,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.courses}
                 icon="📚"
                 title="Advanced Courses (Leistungskurse)"
-                content={details.courses}
               />
             </>
           )}
@@ -94,9 +96,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.offerings}
                 icon="✨"
                 title="Programs & Special Offerings"
-                content={details.offerings}
               />
             </>
           )}
@@ -105,9 +107,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.equipment}
                 icon="🏢"
                 title="Equipment & Facilities"
-                content={details.equipment}
               />
             </>
           )}
@@ -116,9 +118,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.working_groups}
                 icon="🎯"
                 title="Working Groups & Extracurricular Activities"
-                content={details.working_groups}
               />
             </>
           )}
@@ -127,9 +129,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.partners}
                 icon="🤝"
                 title="External Partners"
-                content={details.partners}
               />
             </>
           )}
@@ -138,9 +140,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.differentiation}
                 icon="🎓"
                 title="Differentiation & Teaching Methods"
-                content={details.differentiation}
               />
             </>
           )}
@@ -149,9 +151,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.lunch_info}
                 icon="🍽️"
                 title="Lunch & Meal Services"
-                content={details.lunch_info}
               />
             </>
           )}
@@ -160,9 +162,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.dual_learning}
                 icon="💼"
                 title="Dual Learning Programs"
-                content={details.dual_learning}
               />
             </>
           )}
@@ -171,9 +173,9 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
             <>
               <Divider />
               <DetailFieldSection
+                content={details.additional_info}
                 icon="ℹ️"
                 title="Additional Information"
-                content={details.additional_info}
               />
             </>
           )}
@@ -182,7 +184,7 @@ export function SchoolDetailsPanel({ item, onClose }: SchoolDetailsPanelProps) {
           {isSchool && school && (
             <>
               <Divider />
-              <AISummarySection schoolId={school.id.toString()} bsn={bsn} />
+              <AISummarySection bsn={bsn} schoolId={school.id.toString()} />
             </>
           )}
 

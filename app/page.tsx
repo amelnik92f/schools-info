@@ -20,3 +20,4 @@ export default async function Home() {
 }
 
 export const revalidate = 604800; // 7 days
+export const maxDuration = 60; // 60 seconds

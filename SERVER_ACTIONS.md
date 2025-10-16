@@ -9,16 +9,19 @@ This application uses **Next.js Server Actions** to securely communicate with th
 ### Security Benefits
 
 ✅ **API Key Security**
+
 - API key stays on the server and is never sent to the browser
 - No risk of key exposure in client-side JavaScript bundles
 - Keys cannot be extracted from network requests or browser DevTools
 
 ✅ **Type Safety**
+
 - Full TypeScript support from client to server
 - Shared types between frontend and backend calls
 - Compile-time type checking for API requests/responses
 
 ✅ **Simplified Architecture**
+
 - No need for a separate API route layer
 - Direct function calls from components to server
 - Automatic serialization of request/response data
@@ -94,13 +97,16 @@ All server actions are located in the `lib/actions` directory and are marked wit
 "use server";
 
 // Fetch all enriched schools
-export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]>
+export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]>;
 
 // Fetch standalone construction projects
-export async function fetchStandaloneConstructionProjects(): Promise<ConstructionProject[]>
+export async function fetchStandaloneConstructionProjects(): Promise<
+  ConstructionProject[]
+>;
 ```
 
 **Used in:**
+
 - `app/page.tsx` - Main page to load initial school data
 
 #### 2. AI Summary Action (`/lib/actions/ai-summary.ts`)
@@ -109,10 +115,13 @@ export async function fetchStandaloneConstructionProjects(): Promise<Constructio
 "use server";
 
 // Fetch AI-generated summary for a school
-export async function fetchAISummary(schoolId: string): Promise<AISummaryResponse>
+export async function fetchAISummary(
+  schoolId: string,
+): Promise<AISummaryResponse>;
 ```
 
 **Used in:**
+
 - `lib/store/ai-summary-store.ts` - Zustand store for caching AI summaries
 - Called from client components when user requests a school summary
 
@@ -125,14 +134,15 @@ export async function fetchAISummary(schoolId: string): Promise<AISummaryRespons
 export async function calculateTravelTimes(
   fromCoords: [number, number],
   toCoords: [number, number],
-  schoolId?: string
-): Promise<TravelTime[]>
+  schoolId?: string,
+): Promise<TravelTime[]>;
 
 // Format duration in human-readable format
-export function formatDuration(minutes: number): string
+export function formatDuration(minutes: number): string;
 ```
 
 **Used in:**
+
 - `lib/store/travel-time-store.ts` - Zustand store for caching travel times
 - `components/schools-map/TravelTimeSection.tsx` - Displays travel times
 
@@ -148,7 +158,7 @@ import { fetchEnrichedSchools } from "@/lib/actions/schools";
 
 export default async function Page() {
   const schools = await fetchEnrichedSchools();
-  
+
   return <div>{/* render schools */}</div>;
 }
 ```
@@ -171,7 +181,7 @@ export function SchoolDetails({ schoolId }: Props) {
       console.error("Failed to fetch summary", error);
     }
   };
-  
+
   return <button onClick={handleFetchSummary}>Get Summary</button>;
 }
 ```
@@ -209,12 +219,13 @@ API_KEY=your-secure-api-key-here
 
 ### Variable Scope
 
-| Variable | Accessible In | Bundled in Client JS? |
-|----------|--------------|----------------------|
-| `API_URL` | Everywhere | ✅ Yes (safe - just a URL) |
-| `API_KEY` | Server only | ❌ No (secure) |
+| Variable  | Accessible In | Bundled in Client JS?      |
+| --------- | ------------- | -------------------------- |
+| `API_URL` | Everywhere    | ✅ Yes (safe - just a URL) |
+| `API_KEY` | Server only   | ❌ No (secure)             |
 
 The `API_KEY` variable can only be accessed in:
+
 - Server Components
 - Server Actions
 - API Routes
@@ -238,10 +249,12 @@ export function getApiHeaders(): HeadersInit {
 }
 
 // Fetch enriched schools from backend
-export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]>
+export async function fetchEnrichedSchools(): Promise<EnrichedSchool[]>;
 
 // Fetch standalone construction projects
-export async function fetchStandaloneConstructionProjects(): Promise<ConstructionProject[]>
+export async function fetchStandaloneConstructionProjects(): Promise<
+  ConstructionProject[]
+>;
 ```
 
 These functions are called by server actions, which ensures the API key is only used on the server.
@@ -306,6 +319,7 @@ export async function fetchAISummary(schoolId: string) {
 ```
 
 Server-side logs appear in:
+
 - **Development**: Terminal where `npm run dev` is running
 - **Production (Vercel)**: Vercel function logs
 - **Production (Other)**: Your server/container logs
@@ -327,4 +341,3 @@ The API key is now fully secure and never exposed to clients.
 - [Environment Setup](./ENV_SETUP.md)
 - [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations)
 - [Backend API Authentication](../school-go/API_AUTH.md)
-

@@ -27,6 +27,7 @@ API_KEY=your-secure-api-key-here
 **Default**: `http://localhost:8080` (if not set)
 
 **Examples**:
+
 - Development: `http://localhost:8080`
 - Production: `https://api.your-domain.com`
 
@@ -37,6 +38,7 @@ API_KEY=your-secure-api-key-here
 **Required**: Yes (for production), Optional (for development if backend has no API_KEY set)
 
 **Important Notes**:
+
 - This key **must match** the `API_KEY` configured in your backend's `.env` file
 - **Does NOT use** `NEXT_PUBLIC_` prefix - this keeps it server-side only
 - The key is **never exposed** to the browser or client-side JavaScript
@@ -45,6 +47,7 @@ API_KEY=your-secure-api-key-here
 - Use different keys for development and production
 
 **Generating a secure key**:
+
 ```bash
 openssl rand -hex 32
 ```
@@ -69,6 +72,7 @@ The application uses these environment variables to:
 1. **Connect to the backend API** - All API requests use `API_URL` as the base URL
 
 2. **Authenticate requests** - The `API_KEY` is used in Next.js Server Actions to authenticate API calls:
+
    - `/lib/actions/schools.ts` - Server actions for schools and construction projects
    - `/lib/actions/ai-summary.ts` - Server action for AI-powered summaries
    - `/lib/actions/travel-time.ts` - Server action for travel time calculations
@@ -96,7 +100,8 @@ The application uses these environment variables to:
 
 **Cause**: Backend API is not running or URL is incorrect
 
-**Solution**: 
+**Solution**:
+
 - Verify the backend server is running
 - Check that `API_URL` matches your backend's address and port
 
@@ -105,6 +110,7 @@ The application uses these environment variables to:
 **Cause**: Missing or invalid API key
 
 **Solution**:
+
 1. Verify `API_KEY` (without NEXT_PUBLIC prefix) is set in `.env.local`
 2. Verify it matches the `API_KEY` in the backend's `.env` file
 3. Restart the Next.js dev server after changing environment variables
@@ -114,6 +120,7 @@ The application uses these environment variables to:
 **Cause**: Environment variables are cached
 
 **Solution**:
+
 1. Stop the development server (`Ctrl+C`)
 2. Clear the Next.js cache: `rm -rf .next`
 3. Restart the server: `npm run dev`
@@ -142,4 +149,3 @@ For production deployments (e.g., Vercel, Netlify):
 
 - [Backend API Authentication](/path/to/backend/API_AUTH.md)
 - [Next.js Environment Variables](https://nextjs.org/docs/basic-features/environment-variables)
-

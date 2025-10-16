@@ -1,7 +1,25 @@
+import { Metadata } from "next";
 import { Card, CardBody } from "@heroui/card";
 import { Link } from "@heroui/link";
 
 import { title } from "@/components/primitives";
+import { siteConfig } from "@/config/site";
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Learn about Berlin Schools Map - an open source project to help parents find the right school in Berlin. Built by a Berlin-based software engineer and dad using official government data sources.",
+  openGraph: {
+    title: "About Berlin Schools Map",
+    description:
+      "Learn about this open source project helping parents navigate the school search in Berlin.",
+    url: `${siteConfig.url}/about`,
+    type: "website",
+  },
+  alternates: {
+    canonical: `${siteConfig.url}/about`,
+  },
+};
 
 export default function AboutPage() {
   return (

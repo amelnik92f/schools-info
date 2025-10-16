@@ -10,8 +10,7 @@ import { unstable_cache } from "next/cache";
 
 import { getApiHeaders } from "@/lib/api";
 
-const API_BASE_URL =
-  process.env.API_URL || "http://localhost:8080";
+const API_BASE_URL = process.env.API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 
 interface AISummaryResponse {

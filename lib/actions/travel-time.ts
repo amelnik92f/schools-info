@@ -8,8 +8,7 @@
 import { getApiHeaders } from "@/lib/api";
 import { TRAVEL_MODES, TravelTime } from "@/lib/utils/formatDuration";
 
-const API_BASE_URL =
-  process.env.API_URL || "http://localhost:8080";
+const API_BASE_URL = process.env.API_URL || "http://localhost:8080";
 const API_VERSION = "v1";
 
 /**

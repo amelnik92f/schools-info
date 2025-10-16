@@ -1,12 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef } from "react";
-import MapGL, {
-  NavigationControl,
-  FullscreenControl,
-  ScaleControl,
-  MapRef,
-} from "react-map-gl/maplibre";
+import MapGL, { ScaleControl, MapRef } from "react-map-gl/maplibre";
 import clsx from "clsx";
 
 import { FilterPanel } from "./schools-map/FilterPanel";
@@ -266,8 +261,6 @@ export function SchoolsMap({ schools, standaloneProjects }: SchoolsMapProps) {
           onMove={(evt) => setViewState(evt.viewState)}
         >
           {/* Map Controls */}
-          <NavigationControl position="top-right" />
-          <FullscreenControl position="top-right" />
           <ScaleControl position="bottom-left" />
 
           {/* Custom Location Markers */}
